@@ -1,20 +1,15 @@
 const KEY = "settings";
 
+// Chỉ giọng và tốc độ là thứ người dùng đổi được, và đổi ngay trong popup.
+// Những giá trị còn lại đặt cứng ở đây, không có trang cài đặt nào sửa.
 export const DEFAULTS = {
-  engine: "system",
-  lang: "vi-VN",
-  voiceName: "",
+  voiceId: "",
   rate: 1,
   pitch: 1,
   volume: 1,
+  lang: "vi-VN",
   maxCharsPerSegment: 280,
-  server: {
-    baseUrl: "http://127.0.0.1:8000",
-    model: "vieneu-v3-turbo",
-    voice: "",
-    apiKey: "",
-    sampleRate: 24000
-  }
+  apiKeys: {}
 };
 
 export async function loadSettings() {
@@ -23,7 +18,7 @@ export async function loadSettings() {
   return {
     ...DEFAULTS,
     ...saved,
-    server: { ...DEFAULTS.server, ...(saved.server || {}) }
+    apiKeys: { ...DEFAULTS.apiKeys, ...(saved.apiKeys || {}) }
   };
 }
 
@@ -32,15 +27,16 @@ export async function saveSettings(patch) {
   const next = {
     ...current,
     ...patch,
-    server: { ...current.server, ...(patch.server || {}) }
+    apiKeys: { ...current.apiKeys, ...(patch.apiKeys || {}) }
   };
   await chrome.storage.local.set({ [KEY]: next });
   return next;
 }
 
-// Khoá của máy chủ chỉ nằm trong chrome.storage.local của máy người dùng.
-// Không ghi vào mã nguồn và không đồng bộ lên tài khoản.
+// Máy chủ đọc chạy trên chính máy người dùng nên mặc định không cần khoá. Ai bật
+// xác thực thì đặt khoá thẳng vào chrome.storage, khoá đó không bao giờ đi ngược
+// ra giao diện và không có trong mã nguồn.
 export function withoutSecrets(settings) {
-  const { apiKey, ...server } = settings.server;
-  return { ...settings, server: { ...server, apiKeyDaDat: !!apiKey } };
+  const { apiKeys, ...conLai } = settings;
+  return { ...conLai, apiKeysDaDat: Object.keys(apiKeys || {}).filter((id) => apiKeys[id]) };
 }

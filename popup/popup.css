@@ -95,10 +95,35 @@ input[type="range"] {
   accent-color: var(--chinh);
 }
 
+.goi-y {
+  margin: -6px 0 10px;
+  color: var(--chu-nhat);
+}
+
+.goi-y:empty {
+  display: none;
+}
+
 .buttons {
   display: flex;
   gap: 6px;
   margin: 12px 0 10px;
+}
+
+.buttons button {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  padding: 0;
+}
+
+.buttons svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 button {

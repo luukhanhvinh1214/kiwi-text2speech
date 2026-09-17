@@ -38,36 +38,51 @@ function authHeaders(server) {
 }
 
 export function speechRequest(text, server) {
+  const body = {
+    model: server.model,
+    input: text,
+    voice: server.voice || undefined,
+    response_format: "wav"
+  };
+
+  // Máy chủ nào không khai sample_rate thì đừng gửi: có bản dựng từ chối nguyên
+  // lời gọi khi gặp trường lạ.
+  if (server.sampleRate) body.sample_rate = server.sampleRate;
+
   return {
     url: server.baseUrl.replace(/\/+$/, "") + "/v1/audio/speech",
     headers: authHeaders(server),
-    body: {
-      model: server.model,
-      input: text,
-      voice: server.voice || undefined,
-      response_format: "wav",
-      sample_rate: server.sampleRate
-    }
+    body
   };
 }
 
-export async function listVoices(settings) {
-  const base = settings.server.baseUrl.replace(/\/+$/, "");
-  const res = await fetch(base + "/v1/voices", { headers: authHeaders(settings.server) });
-  if (!res.ok) throw new Error("máy chủ trả về mã " + res.status);
-  const data = await res.json();
-  const rows = Array.isArray(data) ? data : data.data || data.voices || [];
-  return rows.map((v) => ({
-    name: typeof v === "string" ? v : v.name || v.id,
-    lang: (typeof v === "object" && (v.lang || v.language)) || ""
-  }));
-}
-
-export async function check(settings) {
-  const base = settings.server.baseUrl.replace(/\/+$/, "");
-  const res = await fetch(base + "/v1/models", { headers: authHeaders(settings.server) });
+async function getJson(server, path, timeoutMs) {
+  const base = server.baseUrl.replace(/\/+$/, "");
+  const res = await fetch(base + path, {
+    headers: authHeaders(server),
+    signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined
+  });
   if (!res.ok) throw new Error("máy chủ trả về mã " + res.status);
   return res.json();
+}
+
+// Mỗi máy chủ trả danh sách giọng một kiểu: mảng thuần, {data:[...]}, hoặc một
+// đối tượng lấy tên giọng làm khoá.
+export function voiceNamesFrom(data) {
+  const rows = Array.isArray(data) ? data : data?.data || data?.voices;
+  if (Array.isArray(rows)) {
+    return rows.map((row) => (typeof row === "string" ? row : row.name || row.id || "")).filter(Boolean);
+  }
+  if (data && typeof data === "object") return Object.keys(data);
+  return [];
+}
+
+export async function listVoices(server, timeoutMs) {
+  return voiceNamesFrom(await getJson(server, "/v1/voices", timeoutMs));
+}
+
+export async function check(server, timeoutMs) {
+  return getJson(server, "/v1/models", timeoutMs);
 }
 
 export async function speak(segments, settings) {

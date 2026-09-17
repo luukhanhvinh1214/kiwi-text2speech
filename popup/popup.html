@@ -27,6 +27,7 @@
       <span>Giọng đọc</span>
       <select id="voice"></select>
     </label>
+    <p id="goi-y" class="goi-y"></p>
 
     <label class="field">
       <span>Tốc độ <output id="rate-value">1,0</output></span>
@@ -34,15 +35,27 @@
     </label>
 
     <div class="buttons">
-      <button type="button" id="doc" class="primary">Đọc</button>
-      <button type="button" id="tam-dung">Tạm dừng</button>
-      <button type="button" id="tiep-tuc">Tiếp tục</button>
-      <button type="button" id="dung">Dừng</button>
+      <button type="button" id="doc" class="primary" title="Đọc" aria-label="Đọc">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 13 8l-9 5.5z" /></svg>
+      </button>
+      <button type="button" id="tam-dung" title="Tạm dừng" aria-label="Tạm dừng">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="4" y="3" width="3" height="10" />
+          <rect x="9" y="3" width="3" height="10" />
+        </svg>
+      </button>
+      <button type="button" id="tiep-tuc" title="Tiếp tục" aria-label="Tiếp tục">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="3" y="3" width="2.5" height="10" />
+          <path d="M7.5 3 13.5 8l-6 5z" />
+        </svg>
+      </button>
+      <button type="button" id="dung" title="Dừng" aria-label="Dừng">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" /></svg>
+      </button>
     </div>
 
     <p id="status" class="status">Đang chờ</p>
-
-    <button type="button" id="mo-cai-dat" class="link">Cài đặt</button>
 
     <script src="popup.js" type="module"></script>
   </body>

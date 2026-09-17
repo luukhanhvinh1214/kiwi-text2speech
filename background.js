@@ -2,8 +2,10 @@ import { loadSettings, saveSettings, withoutSecrets } from "./src/settings.js";
 import { splitIntoSegments } from "./src/chunker.js";
 import * as systemEngine from "./src/systemEngine.js";
 import * as serverEngine from "./src/serverEngine.js";
+import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } from "./src/voices.js";
 
 const MENU_ID = "kiwi-doc-doan-da-chon";
+const PROBE_TIMEOUT = 2000;
 
 const state = {
   status: "idle",
@@ -13,10 +15,6 @@ const state = {
   message: "",
   text: ""
 };
-
-function engineOf(settings) {
-  return settings.engine === "server" ? serverEngine : systemEngine;
-}
 
 function broadcast() {
   chrome.runtime.sendMessage({ from: "background", type: "state", state }).catch(() => {});
@@ -39,8 +37,32 @@ function onEngineEvent(event) {
   }
 }
 
+async function probePreset(preset, settings) {
+  try {
+    const voices = await serverEngine.listVoices(serverOf(preset, settings), PROBE_TIMEOUT);
+    return { presetId: preset.id, ready: true, voices };
+  } catch (err) {
+    return { presetId: preset.id, ready: false, message: err.message };
+  }
+}
+
+// Giọng mặc định không bao giờ được ghi vào cài đặt: ngay sau khi Chrome khởi
+// động, chrome.tts.getVoices có thể còn thiếu giọng của hệ điều hành, ghi lúc đó
+// là chốt nhầm một giọng rồi giữ mãi. Chọn lại mỗi lần đọc, và bỏ qua giọng đã
+// lưu nếu máy không còn giọng đó.
+async function targetOf(settings) {
+  const parsed = parseVoiceId(settings.voiceId);
+  if (parsed && parsed.kind === "server") return resolveVoice(settings.voiceId, settings);
+
+  const { groups, defaultId } = buildCatalog(await systemEngine.listVoices());
+  const heThong = groups.find((group) => group.id === "system");
+  const conTren = heThong.items.some((item) => item.id === settings.voiceId);
+  return resolveVoice(conTren ? settings.voiceId : defaultId, settings);
+}
+
 async function speak(text) {
   const settings = await loadSettings();
+  const target = await targetOf(settings);
   const segments = splitIntoSegments(text, settings.maxCharsPerSegment);
 
   if (!segments.length) {
@@ -48,10 +70,21 @@ async function speak(text) {
     return { ok: false, message: state.message };
   }
 
+  // Máy chủ chưa chạy thì báo ngay kèm lệnh chạy, thay vì để lỗi "Failed to
+  // fetch" của từng đoạn dội về sau đó.
+  if (target.engine === "server") {
+    const probe = await probePreset(target.preset, settings);
+    if (!probe.ready) {
+      const message = `${target.preset.label} chưa chạy. Chạy lệnh: ${target.preset.run}`;
+      setState({ status: "idle", message });
+      return { ok: false, message };
+    }
+  }
+
   await stop();
   setState({
     status: "speaking",
-    engine: settings.engine,
+    engine: target.engine,
     index: 0,
     total: segments.length,
     message: "",
@@ -59,7 +92,11 @@ async function speak(text) {
   });
 
   try {
-    await engineOf(settings).speak(segments, settings, onEngineEvent);
+    if (target.engine === "server") {
+      await serverEngine.speak(segments, { ...settings, server: target.server });
+    } else {
+      await systemEngine.speak(segments, { ...settings, voiceName: target.voiceName }, onEngineEvent);
+    }
   } catch (err) {
     setState({ status: "idle", message: err.message });
     return { ok: false, message: err.message };
@@ -68,22 +105,23 @@ async function speak(text) {
   return { ok: true, total: segments.length };
 }
 
+function engineInUse() {
+  return state.engine === "server" ? serverEngine : systemEngine;
+}
+
 async function pause() {
-  const settings = await loadSettings();
-  await engineOf(settings).pause();
+  await engineInUse().pause();
   setState({ status: "paused" });
 }
 
 async function resume() {
-  const settings = await loadSettings();
-  await engineOf(settings).resume();
+  await engineInUse().resume();
   setState({ status: "speaking" });
 }
 
 async function stop() {
-  const settings = await loadSettings();
   await systemEngine.stop();
-  if (settings.engine === "server") await serverEngine.stop();
+  await serverEngine.stop();
   setState({ status: "idle", index: 0, message: "" });
 }
 
@@ -106,18 +144,18 @@ async function selectionOfActiveTab() {
 // Hỏi lại chính bộ đọc trước khi trả lời, nếu không popup sẽ hiện "Đang chờ"
 // giữa lúc loa vẫn kêu.
 async function currentState() {
-  const settings = await loadSettings();
-  if (settings.engine === "system" && state.status === "idle") {
+  if (state.engine === "system" && state.status === "idle") {
     const speaking = await new Promise((resolve) => chrome.tts.isSpeaking(resolve));
-    if (speaking) return { ...state, status: "speaking", engine: settings.engine };
+    if (speaking) return { ...state, status: "speaking" };
   }
-  return { ...state, engine: settings.engine };
+  return { ...state };
 }
 
 async function voices() {
   const settings = await loadSettings();
-  if (settings.engine === "server") return serverEngine.listVoices(settings);
-  return systemEngine.listVoices();
+  const system = await systemEngine.listVoices();
+  const probes = await Promise.all(SERVER_PRESETS.map((preset) => probePreset(preset, settings)));
+  return buildCatalog(system, probes);
 }
 
 const handlers = {
@@ -137,11 +175,7 @@ const handlers = {
   voices: () => voices(),
   selection: () => selectionOfActiveTab().then((text) => ({ text })),
   settings: () => loadSettings().then(withoutSecrets),
-  saveSettings: (message) => saveSettings(message.patch).then(withoutSecrets),
-  checkServer: async () => {
-    const settings = await loadSettings();
-    return serverEngine.check(settings);
-  }
+  saveSettings: (message) => saveSettings(message.patch).then(withoutSecrets)
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

@@ -1,0 +1,186 @@
+// Danh sách giọng của extension nằm hết ở đây, không có trang cài đặt nào sửa
+// được. Giọng trên máy bị lọc theo danh sách cho phép; giọng tiếng Việt chạy qua
+// máy chủ trên máy được khai sẵn kèm địa chỉ và lệnh chạy.
+
+const SYSTEM_VOICE_RULES = [
+  { prefix: "microsoft an", lang: "vi-VN" },
+  { prefix: "microsoft david", lang: "en-US" },
+  { prefix: "microsoft mark", lang: "en-US" },
+  { prefix: "microsoft zira", lang: "en-US" },
+  { prefix: "google uk english", lang: "en-GB" },
+  { prefix: "google us english", lang: "en-US" }
+];
+
+export const SERVER_PRESETS = [
+  {
+    id: "vieneu",
+    label: "VieNeu-TTS v3 Turbo",
+    baseUrl: "http://127.0.0.1:8000",
+    model: "vieneu-v3-turbo",
+    sampleRate: 48000,
+    lang: "vi-VN",
+    run: "uv run python -m apps.openai_speech",
+    voices: [
+      "Mai Anh",
+      "Trúc Ly",
+      "Ngọc Huyền",
+      "Thùy Dung",
+      "Ngọc Trân",
+      "Anh Khôi",
+      "Minh Quân Pro",
+      "Quang Sơn",
+      "Thiền Tâm Đức",
+      "Adam bựa"
+    ]
+  },
+  {
+    // VietTTS không nhận sample_rate, để trống thì lời gọi không gửi trường đó.
+    id: "viettts",
+    label: "VietTTS",
+    baseUrl: "http://127.0.0.1:8298",
+    model: "tts-1",
+    sampleRate: null,
+    lang: "vi-VN",
+    run: "viettts server --port 8298",
+    voices: ["nu-nhe-nhang", "quynh", "diep-chi", "cdteam", "atuan", "speechify_1", "speechify_2", "speechify_3"]
+  },
+  {
+    id: "zerotts",
+    label: "ZeroTTS",
+    baseUrl: "http://127.0.0.1:8001",
+    model: "zerotts",
+    sampleRate: 24000,
+    lang: "vi-VN",
+    run: "python tools/zerotts_server.py",
+    voices: []
+  }
+];
+
+export function presetById(id) {
+  return SERVER_PRESETS.find((preset) => preset.id === id) || null;
+}
+
+// "Microsoft David Desktop - English (United States)" và "Microsoft David -
+// English (United States)" là cùng một giọng dưới hai bộ máy của Windows. Cắt
+// đuôi rồi mới so, để trong danh sách chỉ còn một dòng.
+function tidyName(name) {
+  return String(name)
+    .split(" - ")[0]
+    .replace(/\s+Desktop$/i, "")
+    .trim();
+}
+
+export function matchSystemVoices(voices) {
+  const items = [];
+  const seen = new Set();
+
+  for (const rule of SYSTEM_VOICE_RULES) {
+    for (const voice of voices || []) {
+      const name = String(voice?.name || "");
+      if (!name.toLowerCase().startsWith(rule.prefix)) continue;
+
+      const label = tidyName(name);
+      if (seen.has(label)) continue;
+      seen.add(label);
+
+      items.push({ id: "system:" + name, label, lang: voice.lang || rule.lang });
+    }
+  }
+
+  return items;
+}
+
+export function serverVoiceItems(preset, liveNames = []) {
+  const names = [...preset.voices];
+  for (const name of liveNames) {
+    if (name && !names.includes(name)) names.push(name);
+  }
+
+  if (!names.length) {
+    return [{ id: `server:${preset.id}:`, label: `Giọng mặc định của ${preset.label}`, lang: preset.lang }];
+  }
+
+  return names.map((name) => ({ id: `server:${preset.id}:${name}`, label: name, lang: preset.lang }));
+}
+
+export function parseVoiceId(id) {
+  const text = String(id || "");
+  if (text.startsWith("system:")) return { kind: "system", name: text.slice(7) };
+
+  if (text.startsWith("server:")) {
+    const rest = text.slice(7);
+    const cut = rest.indexOf(":");
+    if (cut < 0) return null;
+    return { kind: "server", presetId: rest.slice(0, cut), name: rest.slice(cut + 1) };
+  }
+
+  return null;
+}
+
+export function serverOf(preset, settings = {}, voice = "") {
+  return {
+    baseUrl: preset.baseUrl,
+    model: preset.model,
+    voice,
+    sampleRate: preset.sampleRate,
+    apiKey: (settings.apiKeys && settings.apiKeys[preset.id]) || ""
+  };
+}
+
+export function resolveVoice(voiceId, settings = {}) {
+  const parsed = parseVoiceId(voiceId);
+
+  if (parsed && parsed.kind === "server") {
+    const preset = presetById(parsed.presetId);
+    if (preset) return { engine: "server", preset, server: serverOf(preset, settings, parsed.name) };
+  }
+
+  return { engine: "system", voiceName: parsed && parsed.kind === "system" ? parsed.name : "" };
+}
+
+export function defaultVoiceId(groups) {
+  const system = groups.find((group) => group.id === "system");
+  const tiengViet = system?.items.find((item) => String(item.lang).toLowerCase().startsWith("vi"));
+  if (tiengViet) return tiengViet.id;
+  if (system?.items.length) return system.items[0].id;
+
+  const conLai = groups.find((group) => group.items.length);
+  return conLai ? conLai.items[0].id : "";
+}
+
+function hostOf(baseUrl) {
+  try {
+    return new URL(baseUrl).host;
+  } catch (err) {
+    return baseUrl;
+  }
+}
+
+export function buildCatalog(systemVoices, probes = []) {
+  const groups = [
+    {
+      id: "system",
+      label: "Giọng trên máy",
+      ready: true,
+      hint: "",
+      items: matchSystemVoices(systemVoices)
+    }
+  ];
+
+  for (const preset of SERVER_PRESETS) {
+    const probe = probes.find((item) => item.presetId === preset.id) || {};
+    groups.push({
+      id: preset.id,
+      label: `${preset.label} · ${hostOf(preset.baseUrl)}`,
+      ready: !!probe.ready,
+      hint: probe.ready ? "" : `${preset.label} chưa chạy. Chạy lệnh: ${preset.run}`,
+      items: serverVoiceItems(preset, probe.voices || [])
+    });
+  }
+
+  return { groups, defaultId: defaultVoiceId(groups) };
+}
+
+export function groupOfVoice(catalog, voiceId) {
+  return catalog.groups.find((group) => group.items.some((item) => item.id === voiceId)) || null;
+}

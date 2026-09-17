@@ -1,6 +1,7 @@
 const el = {
   text: document.getElementById("text"),
   voice: document.getElementById("voice"),
+  goiY: document.getElementById("goi-y"),
   rate: document.getElementById("rate"),
   rateValue: document.getElementById("rate-value"),
   doc: document.getElementById("doc"),
@@ -8,11 +9,12 @@ const el = {
   tiepTuc: document.getElementById("tiep-tuc"),
   dung: document.getElementById("dung"),
   status: document.getElementById("status"),
-  layDoan: document.getElementById("lay-doan-da-chon"),
-  moCaiDat: document.getElementById("mo-cai-dat")
+  layDoan: document.getElementById("lay-doan-da-chon")
 };
 
 const send = (message) => chrome.runtime.sendMessage(message);
+
+let catalog = { groups: [], defaultId: "" };
 
 function showStatus(text, loi = false) {
   el.status.textContent = text;
@@ -38,35 +40,62 @@ function showState(state) {
   el.dung.disabled = status === "idle";
 }
 
-async function fillVoices(settings) {
-  el.voice.innerHTML = "";
-  const macDinh = document.createElement("option");
-  macDinh.value = "";
-  macDinh.textContent = "Giọng mặc định";
-  el.voice.append(macDinh);
+function groupOf(voiceId) {
+  return catalog.groups.find((group) => group.items.some((item) => item.id === voiceId)) || null;
+}
 
-  let voices = [];
+function showHint(voiceId) {
+  const group = groupOf(voiceId);
+  el.goiY.textContent = group && !group.ready ? group.hint : "";
+}
+
+function fillVoices(chon) {
+  el.voice.innerHTML = "";
+
+  for (const group of catalog.groups) {
+    if (!group.items.length) continue;
+
+    const nhom = document.createElement("optgroup");
+    nhom.label = group.ready ? group.label : `${group.label} (chưa chạy)`;
+
+    for (const item of group.items) {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.lang ? `${item.label} (${item.lang})` : item.label;
+      nhom.append(option);
+    }
+
+    el.voice.append(nhom);
+  }
+
+  el.voice.value = chon;
+}
+
+async function loadVoices(voiceId) {
+  let ketQua;
   try {
-    voices = await send({ type: "voices" });
+    ketQua = await send({ type: "voices" });
   } catch (err) {
     showStatus("Không đọc được danh sách giọng: " + err.message, true);
     return;
   }
 
-  if (!Array.isArray(voices)) {
-    showStatus(voices?.message || "Không đọc được danh sách giọng", true);
+  if (!ketQua || !Array.isArray(ketQua.groups)) {
+    showStatus(ketQua?.message || "Không đọc được danh sách giọng", true);
     return;
   }
 
-  for (const voice of voices) {
-    const option = document.createElement("option");
-    option.value = voice.name;
-    option.textContent = voice.lang ? `${voice.name} (${voice.lang})` : voice.name;
-    el.voice.append(option);
-  }
+  catalog = ketQua;
 
-  const dangChon = settings.engine === "server" ? settings.server.voice : settings.voiceName;
-  el.voice.value = dangChon || "";
+  // Giọng đã lưu có thể không còn trên máy này nữa. Hiện giọng mặc định nhưng
+  // không ghi đè cài đặt: chỗ chọn giọng là của người dùng, popup chỉ bày ra.
+  const conGiu = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
+  const chon = conGiu ? voiceId : catalog.defaultId;
+
+  fillVoices(chon);
+  showHint(chon);
+
+  if (!chon) showStatus("Máy này chưa có giọng nào trong danh sách", true);
 }
 
 function showRate(value) {
@@ -77,12 +106,13 @@ async function start() {
   const settings = await send({ type: "settings" });
   el.rate.value = settings.rate;
   showRate(settings.rate);
-  await fillVoices(settings);
 
   showState(await send({ type: "state" }));
 
   const { text } = await send({ type: "selection" });
   if (text.trim()) el.text.value = text.trim();
+
+  await loadVoices(settings.voiceId);
 }
 
 el.doc.addEventListener("click", async () => {
@@ -105,18 +135,12 @@ el.layDoan.addEventListener("click", async () => {
   else showStatus("Không có văn bản nào được chọn", true);
 });
 
-el.moCaiDat.addEventListener("click", () => chrome.runtime.openOptionsPage());
-
 el.rate.addEventListener("input", () => showRate(el.rate.value));
 el.rate.addEventListener("change", () => send({ type: "saveSettings", patch: { rate: Number(el.rate.value) } }));
 
 el.voice.addEventListener("change", async () => {
-  const settings = await send({ type: "settings" });
-  const patch =
-    settings.engine === "server"
-      ? { server: { voice: el.voice.value } }
-      : { voiceName: el.voice.value };
-  await send({ type: "saveSettings", patch });
+  showHint(el.voice.value);
+  await send({ type: "saveSettings", patch: { voiceId: el.voice.value } });
 });
 
 chrome.runtime.onMessage.addListener((message) => {
