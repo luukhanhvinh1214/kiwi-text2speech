@@ -1,0 +1,27 @@
+# Thông tin nhạy cảm
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+
+# Phụ thuộc và kết quả build
+node_modules/
+dist/
+build/
+*.zip
+
+# Công cụ cục bộ
+.claude/
+CLAUDE.md
+.vscode/
+.idea/
+
+# Hệ điều hành
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Log
+*.log
+npm-debug.log*
