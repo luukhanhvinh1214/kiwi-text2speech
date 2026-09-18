@@ -81,9 +81,9 @@ async function speak(text) {
     }
   }
 
-  await stop();
+  await stopEngines();
   setState({
-    status: "speaking",
+    status: "preparing",
     engine: target.engine,
     index: 0,
     total: segments.length,
@@ -119,9 +119,15 @@ async function resume() {
   setState({ status: "speaking" });
 }
 
-async function stop() {
+async function stopEngines() {
   await systemEngine.stop();
   await serverEngine.stop();
+}
+
+// Dừng để đọc tiếp thì dùng stopEngines: stop() hạ trạng thái về idle, gọi nó
+// ngay trước khi bật "preparing" là bắn ra một nhịp idle thừa cho popup.
+async function stop() {
+  await stopEngines();
   setState({ status: "idle", index: 0, message: "" });
 }
 

@@ -21,38 +21,16 @@ export const SERVER_PRESETS = [
     lang: "vi-VN",
     run: "uv run python -m apps.openai_speech",
     voices: [
-      "Mai Anh",
       "Trúc Ly",
-      "Ngọc Huyền",
-      "Thùy Dung",
-      "Ngọc Trân",
       "Anh Khôi",
       "Minh Quân Pro",
-      "Quang Sơn",
       "Thiền Tâm Đức",
-      "Adam bựa"
+      "Adam bựa",
+      "Thục Đoan",
+      "Quỳnh Anh",
+      "Đức Trí",
+      "Mạnh Dũng"
     ]
-  },
-  {
-    // VietTTS không nhận sample_rate, để trống thì lời gọi không gửi trường đó.
-    id: "viettts",
-    label: "VietTTS",
-    baseUrl: "http://127.0.0.1:8298",
-    model: "tts-1",
-    sampleRate: null,
-    lang: "vi-VN",
-    run: "viettts server --port 8298",
-    voices: ["nu-nhe-nhang", "quynh", "diep-chi", "cdteam", "atuan", "speechify_1", "speechify_2", "speechify_3"]
-  },
-  {
-    id: "zerotts",
-    label: "ZeroTTS",
-    baseUrl: "http://127.0.0.1:8001",
-    model: "zerotts",
-    sampleRate: 24000,
-    lang: "vi-VN",
-    run: "python tools/zerotts_server.py",
-    voices: []
   }
 ];
 
@@ -174,6 +152,7 @@ export function buildCatalog(systemVoices, probes = []) {
       label: `${preset.label} · ${hostOf(preset.baseUrl)}`,
       ready: !!probe.ready,
       hint: probe.ready ? "" : `${preset.label} chưa chạy. Chạy lệnh: ${preset.run}`,
+      run: preset.run,
       items: serverVoiceItems(preset, probe.voices || [])
     });
   }

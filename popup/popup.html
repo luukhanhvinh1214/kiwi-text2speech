@@ -2,31 +2,39 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <title>Kiwi Text to Speech</title>
+    <title>Kiwi Text2Speech</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header class="brand">
       <img src="../icons/logo-lkv.png" alt="Chữ ký LKV" />
       <div class="brand-text">
-        <div class="name">Lưu Khánh Vinh</div>
+        <div class="name">2imKisSa</div>
         <div class="role">AI &amp; Software Engineer</div>
       </div>
     </header>
 
-    <h1>Kiwi Text to Speech</h1>
+    <h1>Kiwi Text2Speech</h1>
 
-    <label class="field">
-      <span>Văn bản</span>
-      <textarea id="text" rows="6" placeholder="Bôi đen chữ trên trang rồi mở lại, hoặc gõ vào đây"></textarea>
-    </label>
+    <div id="khoi-dong" class="khoi-dong" hidden>
+      <p>Máy chủ giọng nói chưa chạy</p>
+      <button type="button" id="btn-khoi-dong">Sao chép lệnh khởi động</button>
+    </div>
 
-    <button type="button" id="lay-doan-da-chon" class="link">Lấy đoạn đang chọn trên trang</button>
+    <div class="field">
+      <label for="text">Văn bản</label>
+      <div class="o-van-ban" id="o-van-ban">
+        <textarea id="text" rows="6" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
+        <button type="button" id="mo-rong" class="nut-nho">Mở rộng</button>
+      </div>
+    </div>
 
-    <label class="field">
-      <span>Giọng đọc</span>
-      <select id="voice"></select>
-    </label>
+    <div class="field">
+      <label for="voice">Giọng đọc</label>
+      <div class="o-chon">
+        <select id="voice"></select>
+      </div>
+    </div>
     <p id="goi-y" class="goi-y"></p>
 
     <label class="field">
@@ -37,6 +45,7 @@
     <div class="buttons">
       <button type="button" id="doc" class="primary" title="Đọc" aria-label="Đọc">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 13 8l-9 5.5z" /></svg>
+        <span class="quay" aria-hidden="true"></span>
       </button>
       <button type="button" id="tam-dung" title="Tạm dừng" aria-label="Tạm dừng">
         <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -56,6 +65,19 @@
     </div>
 
     <p id="status" class="status">Đang chờ</p>
+
+    <div class="lop-phu" id="lop-phu" hidden>
+      <div class="hop-rong" role="dialog" aria-modal="true" aria-label="Ô văn bản mở rộng">
+        <div class="hop-rong-dau">
+          <span>Văn bản</span>
+          <button type="button" id="dong-mo-rong" class="nut-dong" title="Đóng" aria-label="Đóng">X</button>
+        </div>
+        <div class="hop-rong-than" id="cho-van-ban"></div>
+        <div class="hop-rong-cuoi">
+          <button type="button" id="thu-nho" class="nut-nho">Thu nhỏ</button>
+        </div>
+      </div>
+    </div>
 
     <script src="popup.js" type="module"></script>
   </body>
