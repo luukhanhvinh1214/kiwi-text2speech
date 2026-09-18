@@ -37,6 +37,6 @@ export async function saveSettings(patch) {
 // xác thực thì đặt khoá thẳng vào chrome.storage, khoá đó không bao giờ đi ngược
 // ra giao diện và không có trong mã nguồn.
 export function withoutSecrets(settings) {
-  const { apiKeys, ...conLai } = settings;
-  return { ...conLai, apiKeysDaDat: Object.keys(apiKeys || {}).filter((id) => apiKeys[id]) };
+  const { apiKeys, ...rest } = settings;
+  return { ...rest, apiKeysSet: Object.keys(apiKeys || {}).filter((id) => apiKeys[id]) };
 }

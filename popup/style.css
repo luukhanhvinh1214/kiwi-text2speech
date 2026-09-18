@@ -1,53 +1,53 @@
 :root {
   color-scheme: light;
-  --nen: #ffffff;
-  --chu: #1c1c1c;
-  --chu-nhat: #6b6b6b;
-  --vien: #d6d6d6;
-  --nhan: #f2f2f2;
-  --chinh: #1f6f4a;
+  --bg: #ffffff;
+  --fg: #1c1c1c;
+  --muted: #6b6b6b;
+  --line: #d6d6d6;
+  --surface: #f2f2f2;
+  --accent: #1f6f4a;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-nen="sang"]) {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --nen: #1d1f1e;
-    --chu: #ececec;
-    --chu-nhat: #a2a2a2;
-    --vien: #3a3d3c;
-    --nhan: #292c2b;
-    --chinh: #3f9b6d;
+    --bg: #1d1f1e;
+    --fg: #ececec;
+    --muted: #a2a2a2;
+    --line: #3a3d3c;
+    --surface: #292c2b;
+    --accent: #3f9b6d;
   }
 }
 
-:root[data-nen="toi"] {
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --nen: #1d1f1e;
-  --chu: #ececec;
-  --chu-nhat: #a2a2a2;
-  --vien: #3a3d3c;
-  --nhan: #292c2b;
-  --chinh: #3f9b6d;
+  --bg: #1d1f1e;
+  --fg: #ececec;
+  --muted: #a2a2a2;
+  --line: #3a3d3c;
+  --surface: #292c2b;
+  --accent: #3f9b6d;
 }
 
-:root[data-nen="sang"] {
+:root[data-theme="light"] {
   color-scheme: light;
 }
 
 html {
-  background: var(--nen);
+  background: var(--bg);
 }
 
 body {
   width: 320px;
   margin: 0;
   padding: 14px;
-  background: var(--nen);
-  color: var(--chu);
+  background: var(--bg);
+  color: var(--fg);
   font: 13px/1.45 system-ui, "Segoe UI", sans-serif;
 }
 
-body.mo-rong {
+body.expanded {
   width: 772px;
   height: 572px;
   overflow: hidden;
@@ -98,7 +98,7 @@ h1 {
 .field > label {
   display: block;
   margin-bottom: 4px;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
 textarea,
@@ -107,23 +107,23 @@ select {
   width: 100%;
   box-sizing: border-box;
   padding: 7px 8px;
-  border: 1px solid var(--vien);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--nen);
-  color: var(--chu);
+  background: var(--bg);
+  color: var(--fg);
   font: inherit;
   resize: vertical;
 }
 
-.hang-nhan {
+.field-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 2px;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
-.nut-icon {
+.icon-btn {
   flex: none;
   display: flex;
   align-items: center;
@@ -133,15 +133,15 @@ select {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
-.nut-icon:hover:not(:disabled) {
+.icon-btn:hover:not(:disabled) {
   border-color: transparent;
-  color: var(--chinh);
+  color: var(--accent);
 }
 
-.nut-icon svg {
+.icon-btn svg {
   width: 14px;
   height: 14px;
   fill: none;
@@ -151,39 +151,39 @@ select {
   stroke-linejoin: round;
 }
 
-.o-chon {
+.select-box {
   position: relative;
 }
 
-.o-chon select {
+.select-box select {
   appearance: none;
   padding-right: 30px;
 }
 
-.o-chon::after {
+.select-box::after {
   content: "";
   position: absolute;
   top: 50%;
   right: 13px;
   width: 6px;
   height: 6px;
-  border-right: 1.5px solid var(--chu-nhat);
-  border-bottom: 1.5px solid var(--chu-nhat);
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
   transform: translateY(-70%) rotate(45deg);
   pointer-events: none;
 }
 
 input[type="range"] {
   width: 100%;
-  accent-color: var(--chinh);
+  accent-color: var(--accent);
 }
 
-.goi-y {
+.hint {
   margin: -6px 0 10px;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
-.goi-y:empty {
+.hint:empty {
   display: none;
 }
 
@@ -209,7 +209,7 @@ input[type="range"] {
   fill: currentColor;
 }
 
-.quay {
+.spinner {
   display: none;
   width: 14px;
   height: 14px;
@@ -217,29 +217,29 @@ input[type="range"] {
   border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
-  animation: quay 0.7s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
-button[data-dang-cho="1"] svg {
+button[data-waiting="1"] svg {
   display: none;
 }
 
-button[data-dang-cho="1"] .quay {
+button[data-waiting="1"] .spinner {
   display: block;
 }
 
-button[data-dang-cho="1"]:disabled {
+button[data-waiting="1"]:disabled {
   opacity: 0.85;
 }
 
-@keyframes quay {
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quay {
+  .spinner {
     animation-duration: 2s;
   }
 }
@@ -247,16 +247,16 @@ button[data-dang-cho="1"]:disabled {
 button {
   flex: 1;
   padding: 7px 4px;
-  border: 1px solid var(--vien);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--nhan);
-  color: var(--chu);
+  background: var(--surface);
+  color: var(--fg);
   font: inherit;
   cursor: pointer;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--chinh);
+  border-color: var(--accent);
 }
 
 button:disabled {
@@ -265,43 +265,43 @@ button:disabled {
 }
 
 button.primary {
-  background: var(--chinh);
-  border-color: var(--chinh);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
-.lop-phu {
+.overlay {
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: var(--nen);
+  background: var(--bg);
 }
 
-.o-rong {
+.overlay-box {
   position: absolute;
   inset: 5%;
 }
 
-.o-rong textarea {
+.overlay-box textarea {
   height: 100%;
   resize: none;
 }
 
-.nut-dong {
+.close-btn {
   position: absolute;
   top: -27px;
   right: 0;
   line-height: 1;
 }
 
-.nut-thu-nho {
+.shrink-btn {
   position: absolute;
   right: 0;
   bottom: -27px;
 }
 
-html.trang-rong,
-html.trang-rong body {
+html.frame-page,
+html.frame-page body {
   width: auto;
   height: 100%;
   padding: 0;
@@ -309,37 +309,37 @@ html.trang-rong body {
   overflow: hidden;
 }
 
-html.trang-rong .lop-phu {
+html.frame-page .overlay {
   background: rgba(10, 12, 11, 0.55);
 }
 
-html.trang-rong .nut-icon {
+html.frame-page .icon-btn {
   color: #dcdcdc;
 }
 
-html.trang-rong .nut-icon:hover:not(:disabled) {
+html.frame-page .icon-btn:hover:not(:disabled) {
   color: #ffffff;
 }
 
-.khoi-dong {
+.server-note {
   margin-bottom: 12px;
   padding: 10px 12px;
-  border: 1px solid var(--vien);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--nhan);
+  background: var(--surface);
 }
 
-.khoi-dong p {
+.server-note p {
   margin: 0 0 8px;
   font-size: 12px;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
-.khoi-dong button {
+.server-note button {
   width: 100%;
 }
 
-.chan {
+.foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -347,28 +347,28 @@ html.trang-rong .nut-icon:hover:not(:disabled) {
   margin-top: 10px;
 }
 
-.hang-nhan .nut-icon,
-.nut-nen {
+.field-head .icon-btn,
+.theme-btn {
   margin-right: -5px;
 }
 
-.nut-nen[data-nen="sang"] .hinh-mat-troi,
-.nut-nen[data-nen="toi"] .hinh-mat-trang {
+.theme-btn[data-theme="light"] .icon-sun,
+.theme-btn[data-theme="dark"] .icon-moon {
   display: none;
 }
 
 .status {
   margin: 0;
   min-height: 18px;
-  color: var(--chu-nhat);
+  color: var(--muted);
 }
 
-.status[data-kieu="loi"] {
+.status[data-kind="error"] {
   color: #b3261e;
 }
 
-.status[data-kieu="san-sang"] {
-  color: var(--chinh);
+.status[data-kind="ready"] {
+  color: var(--accent);
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;

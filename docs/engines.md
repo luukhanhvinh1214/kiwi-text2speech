@@ -29,7 +29,7 @@ Việt có thể không có. Khi không có giọng nào khớp `vi-VN`, Chrome 
 khác và đọc tiếng Việt bằng ngữ âm sai.
 
 Extension không bày hết những gì `chrome.tts.getVoices` trả về. Danh sách cho
-phép nằm trong `src/voices.js`, hiện có Microsoft An, David, Mark, Zira và các
+phép nằm trong `src/kt_voices.js`, hiện có Microsoft An, David, Mark, Zira và các
 giọng Google UK English, Google US English. Windows liệt kê cùng một giọng dưới
 hai bộ máy, ví dụ "Microsoft David Desktop" và "Microsoft David", nên phần lọc
 cắt đuôi rồi mới so để trong danh sách chỉ còn một dòng.
@@ -142,7 +142,7 @@ tên giọng làm khoá. Khoá truy cập, nếu có, đi bằng header
 `Authorization: Bearer ...`, và chỉ đọc từ `chrome.storage`.
 
 Thêm một bộ đọc mới gồm hai việc: dựng một máy chủ nói đúng hai đường trên, rồi
-thêm một mục vào `SERVER_PRESETS` trong `src/voices.js` với địa chỉ, tên mô
+thêm một mục vào `SERVER_PRESETS` trong `src/kt_voices.js` với địa chỉ, tên mô
 hình, vài giọng tiêu biểu và lệnh chạy. Lệnh chạy đó chính là câu mà popup hiện
 lên khi máy chủ chưa bật.
 

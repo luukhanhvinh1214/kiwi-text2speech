@@ -1,7 +1,7 @@
 {
   "name": "Kiwi Text to Speech",
   "description": "Đọc thành tiếng đoạn văn bản bạn chọn trên trang web",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "manifest_version": 3,
   "icons": {
     "16": "icons/icon16.png",
@@ -38,16 +38,16 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup/rong.html"],
+      "resources": ["popup/expand.html"],
       "matches": ["<all_urls>"]
     }
   ],
   "commands": {
-    "doc-doan-da-chon": {
+    "speak-selection": {
       "suggested_key": { "default": "Alt+S" },
       "description": "Đọc đoạn đang chọn"
     },
-    "dung-doc": {
+    "stop-speaking": {
       "suggested_key": { "default": "Alt+X" },
       "description": "Dừng đọc"
     }

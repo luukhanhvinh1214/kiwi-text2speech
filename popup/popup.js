@@ -1,52 +1,52 @@
 const el = {
   text: document.getElementById("text"),
-  oVanBan: document.getElementById("o-van-ban"),
-  moRong: document.getElementById("mo-rong"),
-  lopPhu: document.getElementById("lop-phu"),
-  choVanBan: document.getElementById("cho-van-ban"),
-  thuNho: document.getElementById("thu-nho"),
-  dongMoRong: document.getElementById("dong-mo-rong"),
+  textField: document.getElementById("text-field"),
+  expand: document.getElementById("expand"),
+  overlay: document.getElementById("overlay"),
+  textSlot: document.getElementById("text-slot"),
+  shrink: document.getElementById("shrink"),
+  closeExpand: document.getElementById("close-expand"),
   voice: document.getElementById("voice"),
-  goiY: document.getElementById("goi-y"),
+  hint: document.getElementById("hint"),
   rate: document.getElementById("rate"),
   rateValue: document.getElementById("rate-value"),
-  doc: document.getElementById("doc"),
-  tamDung: document.getElementById("tam-dung"),
-  tiepTuc: document.getElementById("tiep-tuc"),
-  dung: document.getElementById("dung"),
+  play: document.getElementById("play"),
+  pause: document.getElementById("pause"),
+  resume: document.getElementById("resume"),
+  stop: document.getElementById("stop"),
   status: document.getElementById("status"),
-  doiNen: document.getElementById("doi-nen"),
-  khoiDong: document.getElementById("khoi-dong"),
-  btnKhoiDong: document.getElementById("btn-khoi-dong")
+  theme: document.getElementById("theme"),
+  serverNote: document.getElementById("server-note"),
+  copyRun: document.getElementById("copy-run")
 };
 
 const send = (message) => chrome.runtime.sendMessage(message);
 
 let catalog = { groups: [], defaultId: "" };
 let state = { status: "idle", index: 0, total: 0, message: "" };
-let sanSang = false;
+let ready = false;
 
-function showStatus(text, kieu = "") {
+function showStatus(text, kind = "") {
   el.status.textContent = text;
-  el.status.dataset.kieu = kieu;
+  el.status.dataset.kind = kind;
 }
 
 function render() {
   const { status, message } = state;
 
-  if (message) showStatus(message, "loi");
+  if (message) showStatus(message, "error");
   else if (status === "preparing") showStatus("");
   else if (status === "speaking") showStatus("Đang đọc");
   else if (status === "paused") showStatus("Đã tạm dừng");
-  else if (sanSang) showStatus("Sẵn sàng", "san-sang");
+  else if (ready) showStatus("Sẵn sàng", "ready");
   else showStatus("Đang chờ");
 
-  const dangCho = status === "preparing";
-  el.doc.dataset.dangCho = dangCho ? "1" : "0";
-  el.doc.disabled = dangCho || status === "speaking";
-  el.tamDung.disabled = status !== "speaking";
-  el.tiepTuc.disabled = status !== "paused";
-  el.dung.disabled = status === "idle";
+  const waiting = status === "preparing";
+  el.play.dataset.waiting = waiting ? "1" : "0";
+  el.play.disabled = waiting || status === "speaking";
+  el.pause.disabled = status !== "speaking";
+  el.resume.disabled = status !== "paused";
+  el.stop.disabled = status === "idle";
 }
 
 function showState(next) {
@@ -60,88 +60,88 @@ function groupOf(voiceId) {
 
 function showHint(voiceId) {
   const group = groupOf(voiceId);
-  const thieu = group && !group.ready;
+  const missing = group && !group.ready;
 
-  el.goiY.textContent = thieu ? group.hint : "";
-  el.khoiDong.hidden = !(thieu && group.run);
+  el.hint.textContent = missing ? group.hint : "";
+  el.serverNote.hidden = !(missing && group.run);
 
-  sanSang = !!voiceId && !!group && group.ready;
+  ready = !!voiceId && !!group && group.ready;
   render();
 }
 
-function fillVoices(chon) {
+function fillVoices(chosen) {
   el.voice.innerHTML = "";
 
   for (const group of catalog.groups) {
     if (!group.items.length) continue;
 
-    const nhom = document.createElement("optgroup");
-    nhom.label = group.ready ? group.label : `${group.label} (chưa chạy)`;
+    const optGroup = document.createElement("optgroup");
+    optGroup.label = group.ready ? group.label : `${group.label} (chưa chạy)`;
 
     for (const item of group.items) {
       const option = document.createElement("option");
       option.value = item.id;
       option.textContent = item.lang ? `${item.label} (${item.lang})` : item.label;
-      nhom.append(option);
+      optGroup.append(option);
     }
 
-    el.voice.append(nhom);
+    el.voice.append(optGroup);
   }
 
-  el.voice.value = chon;
+  el.voice.value = chosen;
 }
 
 async function loadVoices(voiceId) {
-  let ketQua;
+  let result;
   try {
-    ketQua = await send({ type: "voices" });
+    result = await send({ type: "voices" });
   } catch (err) {
     showState({ ...state, message: "Không đọc được danh sách giọng: " + err.message });
     return;
   }
 
-  if (!ketQua || !Array.isArray(ketQua.groups)) {
-    showState({ ...state, message: ketQua?.message || "Không đọc được danh sách giọng" });
+  if (!result || !Array.isArray(result.groups)) {
+    showState({ ...state, message: result?.message || "Không đọc được danh sách giọng" });
     return;
   }
 
-  catalog = ketQua;
+  catalog = result;
 
   // Giọng đã lưu có thể không còn trên máy này, nhưng đừng ghi đè cài đặt của người dùng.
-  const conGiu = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
-  const chon = conGiu ? voiceId : catalog.defaultId;
+  const kept = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
+  const chosen = kept ? voiceId : catalog.defaultId;
 
-  fillVoices(chon);
-  showHint(chon);
+  fillVoices(chosen);
+  showHint(chosen);
 
-  if (!chon) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
+  if (!chosen) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
 }
 
-function showNen() {
-  const nen = window.kiwiNen.dangDung();
-  const nhan = nen === "toi" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối";
+function showTheme() {
+  const theme = window.ktTheme.current();
+  const label = theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối";
 
-  el.doiNen.dataset.nen = nen;
-  el.doiNen.title = nhan;
-  el.doiNen.setAttribute("aria-label", nhan);
+  el.theme.dataset.theme = theme;
+  el.theme.title = label;
+  el.theme.setAttribute("aria-label", label);
 }
 
 function showRate(value) {
   el.rateValue.textContent = Number(value).toFixed(1).replace(".", ",");
 }
 
-function moRongOVanBan(bat) {
-  el.lopPhu.hidden = !bat;
-  document.body.classList.toggle("mo-rong", bat);
+function expandText(on) {
+  el.overlay.hidden = !on;
+  document.body.classList.toggle("expanded", on);
 
-  if (bat) el.choVanBan.append(el.text);
-  else el.oVanBan.append(el.text);
+  if (on) el.textSlot.append(el.text);
+  else el.textField.append(el.text);
 
   el.text.focus();
 }
 
 async function start() {
-  showNen();
+  showTheme();
 
   const settings = await send({ type: "settings" });
   el.rate.value = settings.rate;
@@ -149,9 +149,9 @@ async function start() {
 
   showState(await send({ type: "state" }));
 
-  const { text: nhap } = await send({ type: "layNhap" });
-  if (nhap) {
-    el.text.value = nhap;
+  const { text: draft } = await send({ type: "takeDraft" });
+  if (draft) {
+    el.text.value = draft;
   } else {
     const { text } = await send({ type: "selection" });
     if (text.trim()) el.text.value = text.trim();
@@ -160,7 +160,7 @@ async function start() {
   await loadVoices(settings.voiceId);
 }
 
-el.doc.addEventListener("click", async () => {
+el.play.addEventListener("click", async () => {
   const text = el.text.value.trim();
   if (!text) {
     showState({ ...state, message: "Vui lòng nhập nội dung." });
@@ -174,35 +174,35 @@ el.doc.addEventListener("click", async () => {
   if (result && result.ok === false) showState({ ...state, status: "idle", message: result.message });
 });
 
-el.tamDung.addEventListener("click", () => send({ type: "pause" }));
-el.tiepTuc.addEventListener("click", () => send({ type: "resume" }));
-el.dung.addEventListener("click", () => send({ type: "stop" }));
+el.pause.addEventListener("click", () => send({ type: "pause" }));
+el.resume.addEventListener("click", () => send({ type: "resume" }));
+el.stop.addEventListener("click", () => send({ type: "stop" }));
 
-el.doiNen.addEventListener("click", () => {
-  window.kiwiNen.doi();
-  showNen();
+el.theme.addEventListener("click", () => {
+  window.ktTheme.toggle();
+  showTheme();
 });
 
 // Trang chrome:// và vài trang bị Chrome cấm chèn mã, ở đó rơi về ô mở rộng nằm trong popup.
-el.moRong.addEventListener("click", async () => {
-  await send({ type: "luuNhap", text: el.text.value });
-  const ketQua = await send({ type: "moKhungRong" });
+el.expand.addEventListener("click", async () => {
+  await send({ type: "saveDraft", text: el.text.value });
+  const result = await send({ type: "openFrame" });
 
-  if (ketQua && ketQua.ok === false) {
-    await send({ type: "layNhap" });
-    moRongOVanBan(true);
+  if (result && result.ok === false) {
+    await send({ type: "takeDraft" });
+    expandText(true);
     return;
   }
 
   window.close();
 });
-el.thuNho.addEventListener("click", () => moRongOVanBan(false));
-el.dongMoRong.addEventListener("click", () => moRongOVanBan(false));
+el.shrink.addEventListener("click", () => expandText(false));
+el.closeExpand.addEventListener("click", () => expandText(false));
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !el.lopPhu.hidden) {
+  if (event.key === "Escape" && !el.overlay.hidden) {
     event.preventDefault();
-    moRongOVanBan(false);
+    expandText(false);
   }
 });
 
@@ -214,16 +214,16 @@ el.voice.addEventListener("change", async () => {
   await send({ type: "saveSettings", patch: { voiceId: el.voice.value } });
 });
 
-el.btnKhoiDong.addEventListener("click", async () => {
-  const lenh = catalog.groups
+el.copyRun.addEventListener("click", async () => {
+  const commands = catalog.groups
     .filter((group) => group.run && !group.ready)
     .map((group) => group.run)
     .join("\n");
   try {
-    await navigator.clipboard.writeText(lenh);
-    el.btnKhoiDong.textContent = "Đã sao chép";
+    await navigator.clipboard.writeText(commands);
+    el.copyRun.textContent = "Đã sao chép";
     setTimeout(() => {
-      el.btnKhoiDong.textContent = "Sao chép lệnh khởi động";
+      el.copyRun.textContent = "Sao chép lệnh khởi động";
     }, 2000);
   } catch (err) {
     showState({ ...state, message: "Không sao chép được: " + err.message });

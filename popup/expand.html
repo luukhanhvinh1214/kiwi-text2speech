@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="vi" class="trang-rong">
+<html lang="vi" class="frame-page">
   <head>
     <meta charset="utf-8" />
     <title>Kiwi Text2Speech</title>
-    <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="style.css" />
     <script src="theme.js"></script>
   </head>
   <body>
-    <div class="lop-phu">
-      <div class="o-rong">
+    <div class="overlay">
+      <div class="overlay-box">
         <textarea id="text" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
-        <button type="button" id="dong-mo-rong" class="nut-icon nut-dong" title="Đóng" aria-label="Đóng">X</button>
-        <button type="button" id="thu-nho" class="nut-icon nut-thu-nho" title="Thu nhỏ ô văn bản" aria-label="Thu nhỏ ô văn bản">
+        <button type="button" id="close-expand" class="icon-btn close-btn" title="Đóng" aria-label="Đóng">X</button>
+        <button type="button" id="shrink" class="icon-btn shrink-btn" title="Thu nhỏ ô văn bản" aria-label="Thu nhỏ ô văn bản">
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M12.1 8.4H7.6V3.9" />
             <path d="M7.6 8.4 13.5 2.5" />
@@ -21,6 +21,6 @@
       </div>
     </div>
 
-    <script src="rong.js" type="module"></script>
+    <script src="expand.js" type="module"></script>
   </body>
 </html>

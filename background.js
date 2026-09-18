@@ -1,13 +1,13 @@
-import { loadSettings, saveSettings, withoutSecrets } from "./src/settings.js";
-import { splitIntoSegments } from "./src/chunker.js";
-import * as systemEngine from "./src/systemEngine.js";
-import * as serverEngine from "./src/serverEngine.js";
-import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } from "./src/voices.js";
+import { loadSettings, saveSettings, withoutSecrets } from "./src/kt_settings.js";
+import { splitIntoSegments } from "./src/kt_chunk.js";
+import * as systemEngine from "./src/kt_system.js";
+import * as serverEngine from "./src/kt_server.js";
+import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } from "./src/kt_voices.js";
 
-const MENU_ID = "kiwi-doc-doan-da-chon";
+const MENU_ID = "kt-speak-selection";
 const PROBE_TIMEOUT = 2000;
-const KHUNG_RONG_ID = "kiwi-khung-rong";
-const NHAP_KEY = "nhap";
+const FRAME_ID = "kt-expand-frame";
+const DRAFT_KEY = "draft";
 
 const state = {
   status: "idle",
@@ -57,9 +57,9 @@ async function targetOf(settings) {
   if (parsed && parsed.kind === "server") return resolveVoice(settings.voiceId, settings);
 
   const { groups, defaultId } = buildCatalog(await systemEngine.listVoices());
-  const heThong = groups.find((group) => group.id === "system");
-  const conTren = heThong.items.some((item) => item.id === settings.voiceId);
-  return resolveVoice(conTren ? settings.voiceId : defaultId, settings);
+  const systemGroup = groups.find((group) => group.id === "system");
+  const stillHere = systemGroup.items.some((item) => item.id === settings.voiceId);
+  return resolveVoice(stillHere ? settings.voiceId : defaultId, settings);
 }
 
 async function speak(text) {
@@ -165,13 +165,13 @@ async function voices() {
   return buildCatalog(system, probes);
 }
 
-async function tabDangXem() {
+async function activeTabId() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab && tab.id ? tab.id : null;
 }
 
-async function moKhungRong() {
-  const tabId = await tabDangXem();
+async function openFrame() {
+  const tabId = await activeTabId();
   if (tabId === null) return { ok: false, message: "Không thấy tab nào đang mở" };
 
   try {
@@ -179,14 +179,14 @@ async function moKhungRong() {
       target: { tabId },
       func: (id, url) => {
         if (document.getElementById(id)) return;
-        const khung = document.createElement("iframe");
-        khung.id = id;
-        khung.src = url;
-        khung.style.cssText =
+        const frame = document.createElement("iframe");
+        frame.id = id;
+        frame.src = url;
+        frame.style.cssText =
           "position:fixed;inset:0;width:100vw;height:100vh;border:0;margin:0;padding:0;z-index:2147483647;background:transparent;color-scheme:normal";
-        document.documentElement.append(khung);
+        document.documentElement.append(frame);
       },
-      args: [KHUNG_RONG_ID, chrome.runtime.getURL("popup/rong.html")]
+      args: [FRAME_ID, chrome.runtime.getURL("popup/expand.html")]
     });
   } catch (err) {
     return { ok: false, message: err.message };
@@ -195,18 +195,18 @@ async function moKhungRong() {
   return { ok: true };
 }
 
-async function dongKhungRong() {
-  const tabId = await tabDangXem();
+async function closeFrame() {
+  const tabId = await activeTabId();
   if (tabId === null) return { ok: false, message: "Không thấy tab nào đang mở" };
 
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
       func: (id) => {
-        const khung = document.getElementById(id);
-        if (khung) khung.remove();
+        const frame = document.getElementById(id);
+        if (frame) frame.remove();
       },
-      args: [KHUNG_RONG_ID]
+      args: [FRAME_ID]
     });
   } catch (err) {
     return { ok: false, message: err.message };
@@ -215,19 +215,19 @@ async function dongKhungRong() {
   return { ok: true };
 }
 
-async function layNhap() {
-  const stored = await chrome.storage.session.get(NHAP_KEY);
-  await chrome.storage.session.remove(NHAP_KEY);
-  return { text: stored[NHAP_KEY] || "" };
+async function takeDraft() {
+  const stored = await chrome.storage.session.get(DRAFT_KEY);
+  await chrome.storage.session.remove(DRAFT_KEY);
+  return { text: stored[DRAFT_KEY] || "" };
 }
 
 const handlers = {
   speak: (message) => speak(message.text),
-  moKhungRong: () => moKhungRong(),
-  dongKhungRong: () => dongKhungRong(),
-  thuNhoKhungRong: async () => {
-    const dong = await dongKhungRong();
-    if (!dong.ok) return dong;
+  openFrame: () => openFrame(),
+  closeFrame: () => closeFrame(),
+  shrinkFrame: async () => {
+    const closed = await closeFrame();
+    if (!closed.ok) return closed;
 
     try {
       await chrome.action.openPopup();
@@ -236,8 +236,8 @@ const handlers = {
     }
     return { ok: true };
   },
-  luuNhap: (message) => chrome.storage.session.set({ [NHAP_KEY]: message.text }).then(() => ({ ok: true })),
-  layNhap: () => layNhap(),
+  saveDraft: (message) => chrome.storage.session.set({ [DRAFT_KEY]: message.text }).then(() => ({ ok: true })),
+  takeDraft: () => takeDraft(),
   speakSelection: async () => {
     const text = await selectionOfActiveTab();
     if (!text.trim()) {
@@ -286,6 +286,6 @@ chrome.contextMenus.onClicked.addListener((info) => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "doc-doan-da-chon") handlers.speakSelection();
-  else if (command === "dung-doc") stop();
+  if (command === "speak-selection") handlers.speakSelection();
+  else if (command === "stop-speaking") stop();
 });

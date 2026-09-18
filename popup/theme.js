@@ -1,27 +1,27 @@
 // Phải chạy đồng bộ ở <head>: áp nền sau lần vẽ đầu thì popup chớp sáng rồi mới tối.
-const KHOA_NEN = "kiwi-nen";
+const THEME_KEY = "kiwi-theme";
 
-function nenDaChon() {
-  return localStorage.getItem(KHOA_NEN) || "";
+function savedTheme() {
+  return localStorage.getItem(THEME_KEY) || "";
 }
 
-function nenDangDung() {
-  return nenDaChon() || (matchMedia("(prefers-color-scheme: dark)").matches ? "toi" : "sang");
+function currentTheme() {
+  return savedTheme() || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
 
-function apDungNen(nen) {
-  if (nen) document.documentElement.dataset.nen = nen;
-  else delete document.documentElement.dataset.nen;
+function applyTheme(theme) {
+  if (theme) document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
 }
 
-window.kiwiNen = {
-  dangDung: nenDangDung,
-  doi() {
-    const moi = nenDangDung() === "toi" ? "sang" : "toi";
-    localStorage.setItem(KHOA_NEN, moi);
-    apDungNen(moi);
-    return moi;
+window.ktTheme = {
+  current: currentTheme,
+  toggle() {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+    return next;
   }
 };
 
-apDungNen(nenDaChon());
+applyTheme(savedTheme());

@@ -118,12 +118,12 @@ export function resolveVoice(voiceId, settings = {}) {
 
 export function defaultVoiceId(groups) {
   const system = groups.find((group) => group.id === "system");
-  const tiengViet = system?.items.find((item) => String(item.lang).toLowerCase().startsWith("vi"));
-  if (tiengViet) return tiengViet.id;
+  const vietnamese = system?.items.find((item) => String(item.lang).toLowerCase().startsWith("vi"));
+  if (vietnamese) return vietnamese.id;
   if (system?.items.length) return system.items[0].id;
 
-  const conLai = groups.find((group) => group.items.length);
-  return conLai ? conLai.items[0].id : "";
+  const filled = groups.find((group) => group.items.length);
+  return filled ? filled.items[0].id : "";
 }
 
 export function buildCatalog(systemVoices, probes = []) {

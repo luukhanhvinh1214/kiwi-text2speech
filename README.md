@@ -36,4 +36,4 @@ Sau đó, trong Chrome:
 
 Chưa chạy máy chủ thì popup hiện sẵn lệnh để bạn sao chép. Chạy xong, mở lại popup là thấy đủ giọng.
 
-Cách cài máy chủ và lý do chọn: [docs/chon-bo-doc.md](docs/chon-bo-doc.md).
+Cách cài máy chủ và lý do chọn: [docs/engines.md](docs/engines.md).
