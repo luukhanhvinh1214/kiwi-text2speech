@@ -126,14 +126,6 @@ export function defaultVoiceId(groups) {
   return conLai ? conLai.items[0].id : "";
 }
 
-function hostOf(baseUrl) {
-  try {
-    return new URL(baseUrl).host;
-  } catch (err) {
-    return baseUrl;
-  }
-}
-
 export function buildCatalog(systemVoices, probes = []) {
   const groups = [
     {
@@ -149,7 +141,7 @@ export function buildCatalog(systemVoices, probes = []) {
     const probe = probes.find((item) => item.presetId === preset.id) || {};
     groups.push({
       id: preset.id,
-      label: `${preset.label} · ${hostOf(preset.baseUrl)}`,
+      label: preset.label,
       ready: !!probe.ready,
       hint: probe.ready ? "" : `${preset.label} chưa chạy. Chạy lệnh: ${preset.run}`,
       run: preset.run,

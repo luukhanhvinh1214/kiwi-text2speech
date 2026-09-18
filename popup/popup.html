@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>Kiwi Text2Speech</title>
     <link rel="stylesheet" href="popup.css" />
+    <script src="theme.js"></script>
   </head>
   <body>
     <header class="brand">
@@ -25,7 +26,13 @@
       <label for="text">Văn bản</label>
       <div class="o-van-ban" id="o-van-ban">
         <textarea id="text" rows="6" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
-        <button type="button" id="mo-rong" class="nut-nho">Mở rộng</button>
+        <button type="button" id="mo-rong" class="nut-mo-rong" title="Mở rộng ô văn bản" aria-label="Mở rộng ô văn bản">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M9 2.5h4.5V7" />
+            <path d="M13.5 2.5 7.6 8.4" />
+            <path d="M13.5 9.5v4h-11v-11h4" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -64,7 +71,19 @@
       </button>
     </div>
 
-    <p id="status" class="status">Đang chờ</p>
+    <div class="chan">
+      <p id="status" class="status">Đang chờ</p>
+      <button type="button" id="doi-nen" class="nut-nen">
+        <svg class="hinh-mat-troi" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="3.1" />
+          <path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5" />
+          <path d="M3.47 3.47 4.53 4.53M11.47 11.47l1.06 1.06M12.53 3.47 11.47 4.53M4.53 11.47l-1.06 1.06" />
+        </svg>
+        <svg class="hinh-mat-trang" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M13.5 9.9A5.8 5.8 0 1 1 6.1 2.5 5.8 5.8 0 0 0 13.5 9.9z" />
+        </svg>
+      </button>
+    </div>
 
     <div class="lop-phu" id="lop-phu" hidden>
       <div class="hop-rong" role="dialog" aria-modal="true" aria-label="Ô văn bản mở rộng">

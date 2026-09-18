@@ -15,6 +15,7 @@ const el = {
   tiepTuc: document.getElementById("tiep-tuc"),
   dung: document.getElementById("dung"),
   status: document.getElementById("status"),
+  doiNen: document.getElementById("doi-nen"),
   khoiDong: document.getElementById("khoi-dong"),
   btnKhoiDong: document.getElementById("btn-khoi-dong")
 };
@@ -117,6 +118,15 @@ async function loadVoices(voiceId) {
   if (!chon) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
 }
 
+function showNen() {
+  const nen = window.kiwiNen.dangDung();
+  const nhan = nen === "toi" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối";
+
+  el.doiNen.dataset.nen = nen;
+  el.doiNen.title = nhan;
+  el.doiNen.setAttribute("aria-label", nhan);
+}
+
 function showRate(value) {
   el.rateValue.textContent = Number(value).toFixed(1).replace(".", ",");
 }
@@ -125,8 +135,7 @@ function moRongOVanBan(bat) {
   el.lopPhu.hidden = !bat;
   document.body.classList.toggle("mo-rong", bat);
 
-  // Dời chính ô văn bản qua lại thay vì dựng ô thứ hai, để không phải đồng bộ
-  // nội dung giữa hai chỗ.
+  // Dời chính ô văn bản qua lại, đừng dựng ô thứ hai rồi phải đồng bộ.
   if (bat) el.choVanBan.append(el.text);
   else el.oVanBan.insertBefore(el.text, el.moRong);
 
@@ -134,6 +143,8 @@ function moRongOVanBan(bat) {
 }
 
 async function start() {
+  showNen();
+
   const settings = await send({ type: "settings" });
   el.rate.value = settings.rate;
   showRate(settings.rate);
@@ -153,8 +164,7 @@ el.doc.addEventListener("click", async () => {
     return;
   }
 
-  // Máy chủ mất vài giây dựng mô hình trước khi trả đoạn đầu. Bật con quay ngay
-  // lúc bấm, đừng chờ background báo về.
+  // Thăm dò máy chủ mất tới 2 giây, nên bật con quay ngay chứ không chờ báo về.
   showState({ ...state, status: "preparing", message: "" });
 
   const result = await send({ type: "speak", text });
@@ -164,6 +174,11 @@ el.doc.addEventListener("click", async () => {
 el.tamDung.addEventListener("click", () => send({ type: "pause" }));
 el.tiepTuc.addEventListener("click", () => send({ type: "resume" }));
 el.dung.addEventListener("click", () => send({ type: "stop" }));
+
+el.doiNen.addEventListener("click", () => {
+  window.kiwiNen.doi();
+  showNen();
+});
 
 el.moRong.addEventListener("click", () => moRongOVanBan(true));
 el.thuNho.addEventListener("click", () => moRongOVanBan(false));

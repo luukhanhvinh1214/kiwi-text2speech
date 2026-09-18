@@ -9,7 +9,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-nen="sang"]) {
     --nen: #1d1f1e;
     --chu: #ececec;
     --chu-nhat: #a2a2a2;
@@ -17,6 +17,20 @@
     --nhan: #292c2b;
     --chinh: #3f9b6d;
   }
+}
+
+:root[data-nen="toi"] {
+  color-scheme: dark;
+  --nen: #1d1f1e;
+  --chu: #ececec;
+  --chu-nhat: #a2a2a2;
+  --vien: #3a3d3c;
+  --nhan: #292c2b;
+  --chinh: #3f9b6d;
+}
+
+:root[data-nen="sang"] {
+  color-scheme: light;
 }
 
 body {
@@ -28,8 +42,7 @@ body {
   font: 13px/1.45 system-ui, "Segoe UI", sans-serif;
 }
 
-/* Popup phóng to bằng cách nới chính cửa sổ popup: Chrome co giãn popup theo
-   kích thước nội dung, trần là 800x600. Ô văn bản mở rộng chiếm 90% cửa sổ đó. */
+/* Chrome co cửa sổ popup theo nội dung, trần là 800x600. */
 body.mo-rong {
   width: 740px;
   height: 540px;
@@ -103,18 +116,13 @@ select {
   position: relative;
 }
 
-/* Nút mở rộng nằm đúng chỗ tay kéo của textarea, nên bỏ tay kéo đi; chừa đáy
-   trống để chữ không chui xuống dưới nút. */
 .o-van-ban textarea {
   display: block;
-  padding-bottom: 28px;
+  padding-bottom: 30px;
   resize: none;
 }
 
 .nut-nho {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
   flex: none;
   width: auto;
   padding: 2px 8px;
@@ -122,12 +130,45 @@ select {
   color: var(--chu-nhat);
 }
 
+.nut-mo-rong {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 5px;
+  background: none;
+  color: var(--chu-nhat);
+}
+
+.nut-mo-rong:hover:not(:disabled),
+.nut-nen:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--chinh);
+}
+
+.nut-mo-rong svg,
+.nut-nen svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .o-chon {
   position: relative;
 }
 
-/* Mũi tên mặc định của select dính sát mép phải. Tắt mũi tên đó rồi tự vẽ lại
-   để đẩy vào trong cho cân với lề của ô. */
+/* Mũi tên mặc định của select không dời được, phải tắt đi rồi tự vẽ lại. */
 .o-chon select {
   appearance: none;
   padding-right: 30px;
@@ -201,7 +242,6 @@ button[data-dang-cho="1"] .quay {
   display: block;
 }
 
-/* Nút đang chờ vẫn bị khoá, nhưng phải sáng đủ để thấy con quay. */
 button[data-dang-cho="1"]:disabled {
   opacity: 0.85;
 }
@@ -294,10 +334,6 @@ button.primary {
   justify-content: flex-end;
 }
 
-.hop-rong-cuoi .nut-nho {
-  position: static;
-}
-
 .khoi-dong {
   margin-bottom: 12px;
   padding: 10px 12px;
@@ -316,8 +352,35 @@ button.primary {
   width: 100%;
 }
 
+.chan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nut-nen {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: -5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--chu-nhat);
+}
+
+.nut-nen[data-nen="sang"] .hinh-mat-troi,
+.nut-nen[data-nen="toi"] .hinh-mat-trang {
+  display: none;
+}
+
 .status {
-  margin: 0 0 10px;
+  margin: 0;
   min-height: 18px;
   color: var(--chu-nhat);
 }
