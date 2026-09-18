@@ -1,5 +1,7 @@
+/* Chrome vẽ khung bong bóng popup theo color-scheme của thẻ gốc, nên chỗ này
+   luôn phải là một giá trị dứt khoát, không để "light dark". */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --nen: #ffffff;
   --chu: #1c1c1c;
   --chu-nhat: #6b6b6b;
@@ -10,6 +12,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-nen="sang"]) {
+    color-scheme: dark;
     --nen: #1d1f1e;
     --chu: #ececec;
     --chu-nhat: #a2a2a2;
@@ -33,6 +36,10 @@
   color-scheme: light;
 }
 
+html {
+  background: var(--nen);
+}
+
 body {
   width: 320px;
   margin: 0;
@@ -42,10 +49,10 @@ body {
   font: 13px/1.45 system-ui, "Segoe UI", sans-serif;
 }
 
-/* Chrome co cửa sổ popup theo nội dung, trần là 800x600. */
+/* Chrome co cửa sổ popup theo nội dung, trần là 800x600 kể cả padding. */
 body.mo-rong {
-  width: 740px;
-  height: 540px;
+  width: 772px;
+  height: 572px;
   overflow: hidden;
 }
 
@@ -101,6 +108,7 @@ h1 {
 
 textarea,
 select {
+  display: block;
   width: 100%;
   box-sizing: border-box;
   padding: 7px 8px;
@@ -112,28 +120,15 @@ select {
   resize: vertical;
 }
 
-.o-van-ban {
-  position: relative;
-}
-
-.o-van-ban textarea {
-  display: block;
-  padding-bottom: 30px;
-  resize: none;
-}
-
-.nut-nho {
-  flex: none;
-  width: auto;
-  padding: 2px 8px;
-  font-size: 11px;
+.hang-nhan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
   color: var(--chu-nhat);
 }
 
-.nut-mo-rong {
-  position: absolute;
-  right: 1px;
-  bottom: 1px;
+.nut-icon {
   flex: none;
   display: flex;
   align-items: center;
@@ -142,19 +137,16 @@ select {
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 0 0 5px;
   background: none;
   color: var(--chu-nhat);
 }
 
-.nut-mo-rong:hover:not(:disabled),
-.nut-nen:hover:not(:disabled) {
+.nut-icon:hover:not(:disabled) {
   border-color: transparent;
   color: var(--chinh);
 }
 
-.nut-mo-rong svg,
-.nut-nen svg {
+.nut-icon svg {
   width: 14px;
   height: 14px;
   fill: none;
@@ -291,47 +283,29 @@ button.primary {
   background: var(--nen);
 }
 
-.hop-rong {
+.o-rong {
   position: absolute;
   inset: 5%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: 1px solid var(--vien);
-  border-radius: 8px;
-  background: var(--nen);
 }
 
-.hop-rong-dau {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--chu-nhat);
-}
-
-.nut-dong {
-  flex: none;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  line-height: 1;
-}
-
-.hop-rong-than {
-  flex: 1;
-  min-height: 0;
-}
-
-.hop-rong-than textarea {
+.o-rong textarea {
   height: 100%;
   resize: none;
 }
 
-.hop-rong-cuoi {
-  display: flex;
-  justify-content: flex-end;
+/* Hai nút nằm trong dải 5% chừa quanh ô, để ô giữ đúng 90% và không nút nào
+   đè lên thanh cuộn. */
+.nut-dong {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  line-height: 1;
+}
+
+.nut-thu-nho {
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
 }
 
 .khoi-dong {
@@ -360,18 +334,10 @@ button.primary {
   margin-top: 10px;
 }
 
+/* Kéo nút ra ngoài 5px để nét của ký hiệu thẳng hàng với mép các ô phía trên. */
+.hang-nhan .nut-icon,
 .nut-nen {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
   margin-right: -5px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--chu-nhat);
 }
 
 .nut-nen[data-nen="sang"] .hinh-mat-troi,

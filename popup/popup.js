@@ -32,11 +32,11 @@ function showStatus(text, kieu = "") {
 }
 
 function render() {
-  const { status, index, total, message } = state;
+  const { status, message } = state;
 
   if (message) showStatus(message, "loi");
   else if (status === "preparing") showStatus("Đang chuẩn bị giọng đọc");
-  else if (status === "speaking") showStatus(total > 1 ? `Đang đọc đoạn ${index + 1} trên ${total}` : "Đang đọc");
+  else if (status === "speaking") showStatus("");
   else if (status === "paused") showStatus("Đã tạm dừng");
   else if (sanSang) showStatus("Sẵn sàng", "san-sang");
   else showStatus("Đang chờ");
@@ -137,7 +137,7 @@ function moRongOVanBan(bat) {
 
   // Dời chính ô văn bản qua lại, đừng dựng ô thứ hai rồi phải đồng bộ.
   if (bat) el.choVanBan.append(el.text);
-  else el.oVanBan.insertBefore(el.text, el.moRong);
+  else el.oVanBan.append(el.text);
 
   el.text.focus();
 }
@@ -160,7 +160,7 @@ async function start() {
 el.doc.addEventListener("click", async () => {
   const text = el.text.value.trim();
   if (!text) {
-    showState({ ...state, message: "Chưa có văn bản nào để đọc" });
+    showState({ ...state, message: "Vui lòng nhập nội dung." });
     return;
   }
 

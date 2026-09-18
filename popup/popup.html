@@ -22,11 +22,10 @@
       <button type="button" id="btn-khoi-dong">Sao chép lệnh khởi động</button>
     </div>
 
-    <div class="field">
-      <label for="text">Văn bản</label>
-      <div class="o-van-ban" id="o-van-ban">
-        <textarea id="text" rows="6" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
-        <button type="button" id="mo-rong" class="nut-mo-rong" title="Mở rộng ô văn bản" aria-label="Mở rộng ô văn bản">
+    <div class="field" id="o-van-ban">
+      <div class="hang-nhan">
+        <label for="text">Văn bản</label>
+        <button type="button" id="mo-rong" class="nut-icon" title="Mở rộng ô văn bản" aria-label="Mở rộng ô văn bản">
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M9 2.5h4.5V7" />
             <path d="M13.5 2.5 7.6 8.4" />
@@ -34,6 +33,7 @@
           </svg>
         </button>
       </div>
+      <textarea id="text" rows="6" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
     </div>
 
     <div class="field">
@@ -73,7 +73,7 @@
 
     <div class="chan">
       <p id="status" class="status">Đang chờ</p>
-      <button type="button" id="doi-nen" class="nut-nen">
+      <button type="button" id="doi-nen" class="nut-icon nut-nen">
         <svg class="hinh-mat-troi" viewBox="0 0 16 16" aria-hidden="true">
           <circle cx="8" cy="8" r="3.1" />
           <path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5" />
@@ -85,17 +85,16 @@
       </button>
     </div>
 
-    <div class="lop-phu" id="lop-phu" hidden>
-      <div class="hop-rong" role="dialog" aria-modal="true" aria-label="Ô văn bản mở rộng">
-        <div class="hop-rong-dau">
-          <span>Văn bản</span>
-          <button type="button" id="dong-mo-rong" class="nut-dong" title="Đóng" aria-label="Đóng">X</button>
-        </div>
-        <div class="hop-rong-than" id="cho-van-ban"></div>
-        <div class="hop-rong-cuoi">
-          <button type="button" id="thu-nho" class="nut-nho">Thu nhỏ</button>
-        </div>
-      </div>
+    <div class="lop-phu" id="lop-phu" role="dialog" aria-modal="true" aria-label="Ô văn bản mở rộng" hidden>
+      <div class="o-rong" id="cho-van-ban"></div>
+      <button type="button" id="dong-mo-rong" class="nut-icon nut-dong" title="Đóng" aria-label="Đóng">X</button>
+      <button type="button" id="thu-nho" class="nut-icon nut-thu-nho" title="Thu nhỏ ô văn bản" aria-label="Thu nhỏ ô văn bản">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M12.1 8.4H7.6V3.9" />
+          <path d="M7.6 8.4 13.5 2.5" />
+          <path d="M13.5 9.5v4h-11v-11h4" />
+        </svg>
+      </button>
     </div>
 
     <script src="popup.js" type="module"></script>
