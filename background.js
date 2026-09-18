@@ -6,6 +6,8 @@ import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } fr
 
 const MENU_ID = "kiwi-doc-doan-da-chon";
 const PROBE_TIMEOUT = 2000;
+const KHUNG_RONG_ID = "kiwi-khung-rong";
+const NHAP_KEY = "nhap";
 
 const state = {
   status: "idle",
@@ -163,8 +165,79 @@ async function voices() {
   return buildCatalog(system, probes);
 }
 
+async function tabDangXem() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab && tab.id ? tab.id : null;
+}
+
+async function moKhungRong() {
+  const tabId = await tabDangXem();
+  if (tabId === null) return { ok: false, message: "Không thấy tab nào đang mở" };
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (id, url) => {
+        if (document.getElementById(id)) return;
+        const khung = document.createElement("iframe");
+        khung.id = id;
+        khung.src = url;
+        khung.style.cssText =
+          "position:fixed;inset:0;width:100vw;height:100vh;border:0;margin:0;padding:0;z-index:2147483647;background:transparent;color-scheme:normal";
+        document.documentElement.append(khung);
+      },
+      args: [KHUNG_RONG_ID, chrome.runtime.getURL("popup/rong.html")]
+    });
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+
+  return { ok: true };
+}
+
+async function dongKhungRong() {
+  const tabId = await tabDangXem();
+  if (tabId === null) return { ok: false, message: "Không thấy tab nào đang mở" };
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (id) => {
+        const khung = document.getElementById(id);
+        if (khung) khung.remove();
+      },
+      args: [KHUNG_RONG_ID]
+    });
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+
+  return { ok: true };
+}
+
+async function layNhap() {
+  const stored = await chrome.storage.session.get(NHAP_KEY);
+  await chrome.storage.session.remove(NHAP_KEY);
+  return { text: stored[NHAP_KEY] || "" };
+}
+
 const handlers = {
   speak: (message) => speak(message.text),
+  moKhungRong: () => moKhungRong(),
+  dongKhungRong: () => dongKhungRong(),
+  thuNhoKhungRong: async () => {
+    const dong = await dongKhungRong();
+    if (!dong.ok) return dong;
+
+    try {
+      await chrome.action.openPopup();
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+    return { ok: true };
+  },
+  luuNhap: (message) => chrome.storage.session.set({ [NHAP_KEY]: message.text }).then(() => ({ ok: true })),
+  layNhap: () => layNhap(),
   speakSelection: async () => {
     const text = await selectionOfActiveTab();
     if (!text.trim()) {

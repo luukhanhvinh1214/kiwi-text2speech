@@ -289,15 +289,36 @@ button.primary {
 
 .nut-dong {
   position: absolute;
-  top: 4px;
-  right: 8px;
+  top: -27px;
+  right: 0;
   line-height: 1;
 }
 
 .nut-thu-nho {
   position: absolute;
-  right: 8px;
-  bottom: 4px;
+  right: 0;
+  bottom: -27px;
+}
+
+html.trang-rong,
+html.trang-rong body {
+  width: auto;
+  height: 100%;
+  padding: 0;
+  background: none;
+  overflow: hidden;
+}
+
+html.trang-rong .lop-phu {
+  background: rgba(10, 12, 11, 0.55);
+}
+
+html.trang-rong .nut-icon {
+  color: #dcdcdc;
+}
+
+html.trang-rong .nut-icon:hover:not(:disabled) {
+  color: #ffffff;
 }
 
 .khoi-dong {

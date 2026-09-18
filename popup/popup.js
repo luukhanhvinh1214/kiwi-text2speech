@@ -149,8 +149,13 @@ async function start() {
 
   showState(await send({ type: "state" }));
 
-  const { text } = await send({ type: "selection" });
-  if (text.trim()) el.text.value = text.trim();
+  const { text: nhap } = await send({ type: "layNhap" });
+  if (nhap) {
+    el.text.value = nhap;
+  } else {
+    const { text } = await send({ type: "selection" });
+    if (text.trim()) el.text.value = text.trim();
+  }
 
   await loadVoices(settings.voiceId);
 }
@@ -178,7 +183,19 @@ el.doiNen.addEventListener("click", () => {
   showNen();
 });
 
-el.moRong.addEventListener("click", () => moRongOVanBan(true));
+// Trang chrome:// và vài trang bị Chrome cấm chèn mã, ở đó rơi về ô mở rộng nằm trong popup.
+el.moRong.addEventListener("click", async () => {
+  await send({ type: "luuNhap", text: el.text.value });
+  const ketQua = await send({ type: "moKhungRong" });
+
+  if (ketQua && ketQua.ok === false) {
+    await send({ type: "layNhap" });
+    moRongOVanBan(true);
+    return;
+  }
+
+  window.close();
+});
 el.thuNho.addEventListener("click", () => moRongOVanBan(false));
 el.dongMoRong.addEventListener("click", () => moRongOVanBan(false));
 
