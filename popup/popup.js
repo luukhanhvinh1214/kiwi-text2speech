@@ -35,8 +35,8 @@ function render() {
   const { status, message } = state;
 
   if (message) showStatus(message, "loi");
-  else if (status === "preparing") showStatus("Đang chuẩn bị giọng đọc");
-  else if (status === "speaking") showStatus("");
+  else if (status === "preparing") showStatus("");
+  else if (status === "speaking") showStatus("Đang đọc");
   else if (status === "paused") showStatus("Đã tạm dừng");
   else if (sanSang) showStatus("Sẵn sàng", "san-sang");
   else showStatus("Đang chờ");
@@ -107,8 +107,7 @@ async function loadVoices(voiceId) {
 
   catalog = ketQua;
 
-  // Giọng đã lưu có thể không còn trên máy này nữa. Hiện giọng mặc định nhưng
-  // không ghi đè cài đặt: chỗ chọn giọng là của người dùng, popup chỉ bày ra.
+  // Giọng đã lưu có thể không còn trên máy này, nhưng đừng ghi đè cài đặt của người dùng.
   const conGiu = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
   const chon = conGiu ? voiceId : catalog.defaultId;
 
@@ -135,7 +134,6 @@ function moRongOVanBan(bat) {
   el.lopPhu.hidden = !bat;
   document.body.classList.toggle("mo-rong", bat);
 
-  // Dời chính ô văn bản qua lại, đừng dựng ô thứ hai rồi phải đồng bộ.
   if (bat) el.choVanBan.append(el.text);
   else el.oVanBan.append(el.text);
 

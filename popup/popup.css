@@ -1,5 +1,3 @@
-/* Chrome vẽ khung bong bóng popup theo color-scheme của thẻ gốc, nên chỗ này
-   luôn phải là một giá trị dứt khoát, không để "light dark". */
 :root {
   color-scheme: light;
   --nen: #ffffff;
@@ -49,15 +47,12 @@ body {
   font: 13px/1.45 system-ui, "Segoe UI", sans-serif;
 }
 
-/* Chrome co cửa sổ popup theo nội dung, trần là 800x600 kể cả padding. */
 body.mo-rong {
   width: 772px;
   height: 572px;
   overflow: hidden;
 }
 
-/* Dải chữ ký giữ nền sáng ở cả hai chế độ màu: chữ ký LKV là nét xanh đậm trên
-   nền trong suốt, đặt lên nền tối thì gần như biến mất. */
 .brand {
   display: flex;
   align-items: center;
@@ -160,7 +155,6 @@ select {
   position: relative;
 }
 
-/* Mũi tên mặc định của select không dời được, phải tắt đi rồi tự vẽ lại. */
 .o-chon select {
   appearance: none;
   padding-right: 30px;
@@ -293,8 +287,6 @@ button.primary {
   resize: none;
 }
 
-/* Hai nút nằm trong dải 5% chừa quanh ô, để ô giữ đúng 90% và không nút nào
-   đè lên thanh cuộn. */
 .nut-dong {
   position: absolute;
   top: 4px;
@@ -334,7 +326,6 @@ button.primary {
   margin-top: 10px;
 }
 
-/* Kéo nút ra ngoài 5px để nét của ký hiệu thẳng hàng với mép các ô phía trên. */
 .hang-nhan .nut-icon,
 .nut-nen {
   margin-right: -5px;

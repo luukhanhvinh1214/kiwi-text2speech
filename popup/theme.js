@@ -1,4 +1,4 @@
-// Chạy đồng bộ ở <head> để nền được áp trước lần vẽ đầu, nếu không popup chớp sáng rồi mới tối.
+// Phải chạy đồng bộ ở <head>: áp nền sau lần vẽ đầu thì popup chớp sáng rồi mới tối.
 const KHOA_NEN = "kiwi-nen";
 
 function nenDaChon() {
