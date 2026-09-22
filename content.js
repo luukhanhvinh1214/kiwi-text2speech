@@ -7,6 +7,7 @@
   let selectedText = "";
   let selectionRect = null;
   let translatedText = "";
+  let scrollRaf = 0;
 
   const send = (message) => chrome.runtime.sendMessage(message);
 
@@ -30,6 +31,11 @@
         overflow: visible;
         pointer-events: none;
       }
+      .bubble[hidden],
+      .card[hidden],
+      [hidden] {
+        display: none !important;
+      }
       .bubble {
         position: fixed;
         pointer-events: auto;
@@ -51,15 +57,17 @@
         height: 28px;
         border: 0;
         border-radius: 50%;
-        background: linear-gradient(135deg, #1f6f4a, #2a8a5d);
-        color: #ffffff;
+        background: #ffffff;
         cursor: pointer;
         padding: 0;
+        overflow: hidden;
       }
-      .trigger-btn svg {
-        width: 14px;
-        height: 14px;
-        fill: currentColor;
+      .trigger-btn img {
+        width: 24px;
+        height: 24px;
+        display: block;
+        border-radius: 50%;
+        pointer-events: none;
       }
       .actions {
         display: none;
@@ -123,9 +131,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid #f0f0f0;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      .card-footer .icon-btn {
+        margin-left: auto;
       }
       .icon-btn {
         display: inline-flex;
@@ -134,20 +144,18 @@
         width: 26px;
         height: 26px;
         padding: 0;
-        border: 1px solid #d6d6d6;
+        border: 0;
         border-radius: 4px;
-        background: #f7fbf8;
+        background: none;
         color: #1f6f4a;
         cursor: pointer;
       }
       .icon-btn:hover {
         background: #e6f1ea;
-        border-color: #1f6f4a;
       }
       .icon-btn svg {
-        width: 13px;
-        height: 13px;
-        fill: currentColor;
+        width: 16px;
+        height: 16px;
       }
       .card-status {
         font-size: 11px;
@@ -155,12 +163,14 @@
       }
     `;
 
+    const iconUrl = chrome.runtime.getURL("icons/icon32.png");
+
     const container = document.createElement("div");
     container.className = "container";
     container.innerHTML = `
       <div class="bubble" id="bubble" hidden>
         <button type="button" class="trigger-btn" id="trigger" title="Kiwi Text to Speech" aria-label="Kiwi Text to Speech">
-          <svg viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg>
+          <img src="${iconUrl}" alt="Kiwi Text to Speech" />
         </button>
         <div class="actions" id="actions">
           <button type="button" class="action-btn" id="speak-btn" title="Đọc văn bản" aria-label="Đọc văn bản">
@@ -177,10 +187,13 @@
       <div class="card" id="card" hidden>
         <div class="card-body" id="card-body"></div>
         <div class="card-footer">
-          <button type="button" class="icon-btn" id="card-speak" title="Đọc bản dịch" aria-label="Đọc bản dịch">
-            <svg viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg>
-          </button>
           <span class="card-status" id="card-status"></span>
+          <button type="button" class="icon-btn" id="card-speak" title="Đọc bản dịch" aria-label="Đọc bản dịch">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M7.5 2.5 4 5.5H1.5v5H4l3.5 3v-11z" fill="currentColor"/>
+              <path d="M10.5 5a3.5 3.5 0 0 1 0 6M12.5 3a6.5 6.5 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </button>
         </div>
       </div>
     `;
@@ -207,6 +220,9 @@
     trigger.addEventListener("click", (e) => {
       e.stopPropagation();
       bubble.classList.add("expanded");
+      if (selectionRect) {
+        positionBubble(selectionRect);
+      }
     });
 
     speakBtn.addEventListener("click", (e) => {
@@ -219,9 +235,10 @@
     translateBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const text = selectedText;
+      const rect = selectionRect;
       bubble.hidden = true;
 
-      showCard("Đang dịch...", selectionRect);
+      showCard("Đang dịch...", rect);
       cardStatus.textContent = "Đang dịch";
 
       try {
@@ -248,14 +265,10 @@
     });
   }
 
-  function showBubble(rect) {
-    ensureHost();
+  function positionBubble(rect) {
+    if (!shadow || !rect) return;
     const bubble = shadow.getElementById("bubble");
-    const card = shadow.getElementById("card");
-    card.hidden = true;
-
-    bubble.classList.remove("expanded");
-    bubble.hidden = false;
+    if (!bubble) return;
 
     let left = rect.right - 14;
     let top = rect.top - 36;
@@ -264,19 +277,18 @@
       top = rect.bottom + 8;
     }
 
-    const maxLeft = window.innerWidth - 44;
+    const isExpanded = bubble.classList.contains("expanded");
+    const maxLeft = window.innerWidth - (isExpanded ? 160 : 44);
     left = Math.min(Math.max(8, left), maxLeft);
 
     bubble.style.left = `${left}px`;
     bubble.style.top = `${top}px`;
   }
 
-  function showCard(initialText, rect) {
-    ensureHost();
+  function positionCard(rect) {
+    if (!shadow || !rect) return;
     const card = shadow.getElementById("card");
-    const cardBody = shadow.getElementById("card-body");
-    cardBody.textContent = initialText;
-    card.hidden = false;
+    if (!card) return;
 
     let left = rect.left;
     let top = rect.top - 150;
@@ -292,6 +304,30 @@
     card.style.top = `${top}px`;
   }
 
+  function showBubble(rect) {
+    ensureHost();
+    const bubble = shadow.getElementById("bubble");
+    const card = shadow.getElementById("card");
+    card.hidden = true;
+
+    bubble.classList.remove("expanded");
+    bubble.hidden = false;
+
+    positionBubble(rect);
+  }
+
+  function showCard(initialText, rect) {
+    ensureHost();
+    const card = shadow.getElementById("card");
+    const cardBody = shadow.getElementById("card-body");
+    cardBody.textContent = initialText;
+    card.hidden = false;
+
+    if (rect) {
+      positionCard(rect);
+    }
+  }
+
   function hideUI() {
     if (!shadow) return;
     const bubble = shadow.getElementById("bubble");
@@ -304,22 +340,38 @@
       card.hidden = true;
     }
     translatedText = "";
+    selectedText = "";
+    selectionRect = null;
   }
 
   function handleSelection() {
     const selection = window.getSelection();
-    const text = selection ? selection.toString().trim() : "";
+    if (!selection || selection.isCollapsed) {
+      hideUI();
+      return;
+    }
 
+    const text = selection.toString().trim();
     if (!text || text.length < 1) {
       hideUI();
       return;
     }
 
-    if (selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+    if (selection.rangeCount === 0) {
+      hideUI();
+      return;
+    }
 
-    if (rect.width === 0 && rect.height === 0) return;
+    const range = selection.getRangeAt(0);
+    if (host && host.contains(range.commonAncestorContainer)) {
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      hideUI();
+      return;
+    }
 
     selectedText = text;
     selectionRect = rect;
@@ -327,14 +379,55 @@
     showBubble(rect);
   }
 
-  document.addEventListener("mouseup", (e) => {
-    if (host && e.composedPath().includes(host)) return;
-    setTimeout(handleSelection, 25);
-  });
+  function updatePosition() {
+    if (!shadow) return;
+    const bubble = shadow.getElementById("bubble");
+    const card = shadow.getElementById("card");
+    const bubbleVisible = bubble && !bubble.hidden;
+    const cardVisible = card && !card.hidden;
 
-  document.addEventListener("keyup", (e) => {
-    if (["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-      setTimeout(handleSelection, 50);
+    if (!bubbleVisible && !cardVisible) return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim() || selection.rangeCount === 0) {
+      hideUI();
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    if (rect.width === 0 && rect.height === 0) {
+      hideUI();
+      return;
+    }
+
+    if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+      hideUI();
+      return;
+    }
+
+    selectionRect = rect;
+    if (bubbleVisible) {
+      positionBubble(rect);
+    }
+    if (cardVisible) {
+      positionCard(rect);
+    }
+  }
+
+  function handleScrollOrResize() {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      updatePosition();
+    });
+  }
+
+  document.addEventListener("selectionchange", () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+      hideUI();
     }
   });
 
@@ -342,4 +435,22 @@
     if (host && e.composedPath().includes(host)) return;
     hideUI();
   });
+
+  document.addEventListener("mouseup", (e) => {
+    if (host && e.composedPath().includes(host)) return;
+    setTimeout(handleSelection, 20);
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Escape") {
+      hideUI();
+      return;
+    }
+    if (["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+      setTimeout(handleSelection, 40);
+    }
+  });
+
+  window.addEventListener("scroll", handleScrollOrResize, { capture: true, passive: true });
+  window.addEventListener("resize", handleScrollOrResize, { passive: true });
 })();
