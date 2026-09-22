@@ -1,39 +1,62 @@
 # Kiwi Text to Speech
 
-Extension Chrome đọc thành tiếng đoạn văn bản bạn chọn trên trang web.
+Extension đọc văn bản thành tiếng cho Chrome do **Vinhdeptrai** xây dựng.
 
-Bôi đen chữ trên trang rồi mở extension, hoặc gõ thẳng vào ô văn bản. Chọn giọng, chỉnh tốc độ, tạm dừng và tiếp tục ngay trong popup. Có nút đổi nền sáng tối.
+Mọi thứ chạy trên máy bạn, an toàn, bảo mật, không thu thập dữ liệu duyệt web.
 
-Chuột phải vào đoạn đã bôi đen cũng đọc được. Phím tắt: `Alt+S` đọc, `Alt+X` dừng.
+## Chức năng
 
-## Cài
+- Đọc chữ bôi đen trên trang web qua nút loa nổi hoặc menu chuột phải.
+- Dịch nhanh đoạn bôi đen và đọc bản dịch ngay trên thẻ nổi tại trang.
+- Nhập hoặc dán văn bản trực tiếp vào popup để nghe. Có nút mở rộng toàn màn hình để dễ đọc các đoạn văn dài.
+- Tab Dịch riêng trong popup: tự nhận diện ngôn ngữ nguồn, dịch sang tiếng Việt và tự chọn giọng đọc phù hợp cho từng ngôn ngữ.
+- Tự động chèn khoảng nghỉ đầu để bộ đọc không bị nuốt âm khi mới khởi động loa.
+- Tải trước đoạn âm tiếp theo khi đọc bài dài, nghe liền mạch không bị khựng.
+- Đổi giao diện Sáng / Tối, chỉnh tốc độ đọc, tạm dừng và tiếp tục mượt mà.
+- Hỗ trợ giao thức MCP (`mcp-server/`) cho AI agent điều khiển đọc văn bản.
 
-**Nếu bạn dùng git:**
+## Cài đặt
 
-```
+Chưa lên Chrome Web Store, nạp thủ công:
+
+```bash
 git clone https://github.com/luukhanhvinh1214/kiwi-text2speech.git
 ```
 
-**Nếu bạn không dùng git:** tải thư mục ở đây rồi giải nén.
-
-https://drive.google.com/drive/folders/1MsxgSmInAK9RLiVXIwOVCnTptzJl7tki?usp=sharing
-
-Sau đó, trong Chrome:
-
 1. Mở `chrome://extensions`
-2. Bật **Developer mode** ở góc trên bên phải
-3. Bấm **Load unpacked**, trỏ vào thư mục vừa tải về
+2. Bật **Chế độ dành cho nhà phát triển** (góc trên bên phải)
+3. Bấm **Tải tiện ích đã giải nén** và chọn thư mục vừa clone
+4. Tải lại các tab đang mở
+
+## Bản ổn định
+
+Nếu bạn không dùng git, hãy tải phiên bản nén ở đây:
+
+[Google Drive](https://drive.google.com/drive/folders/1MsxgSmInAK9RLiVXIwOVCnTptzJl7tki?usp=sharing)
+
+Tải về, giải nén, rồi làm bốn bước ở trên với thư mục vừa giải nén.
+
+## Sử dụng
+
+Bấm vào icon trên thanh công cụ hoặc thao tác trực tiếp trên trang:
+
+- **Bong bóng đọc nhanh**: Bôi đen đoạn chữ trên bất kỳ trang web nào, một biểu tượng loa nhỏ sẽ hiện lên để bạn bấm đọc ngay mà không cần mở popup.
+- **Thẻ dịch trên trang**: Bấm vào nút dịch ở bong bóng để xem bản dịch và nghe phát âm bản dịch trực tiếp.
+- **Menu chuột phải**: Chuột phải vào đoạn chữ đã bôi đen, chọn **Đọc đoạn đã chọn**.
+- **Phóng to khung soạn thảo**: Bấm biểu tượng phóng to ở góc trên ô nhập văn bản trong popup để mở giao diện toàn màn hình, tiện xem và sửa các bài viết dài.
+- **Tab Dịch trong popup**: Nhập văn bản nguồn, bấm dịch và chọn giọng đọc riêng cho bản dịch. Có nút sao chép và liên kết mở nhanh Google Dịch.
+
+## Phím tắt
+
+- `Alt+S`: Đọc đoạn văn bản đang chọn trên trang.
+- `Alt+X`: Dừng đọc ngay lập tức.
 
 ## Giọng đọc
 
-**Giọng trên máy** dùng được ngay, không cần cài thêm: Microsoft An, David, Mark, Zira, Google UK English, Google US English. Máy có giọng nào thì hiện giọng đó. Có Microsoft An thì lấy làm mặc định vì đây là giọng tiếng Việt duy nhất trong nhóm.
+- **Giọng có sẵn trên máy (System)**: Dùng được ngay, không cần cài đặt (Microsoft An, David, Mark, Zira, Google US/UK...). Tự động ưu tiên giọng tiếng Việt nếu máy có.
+- **Giọng AI tự nhiên qua máy chủ cục bộ (Local Server)**: Hỗ trợ các máy chủ giọng AI tiếng Việt chất lượng cao chạy trên máy (chuẩn OpenAI speech):
+  - **VieNeu-TTS** (cổng 8000): `uv run python -m apps.openai_speech`
+  - **VietTTS** (cổng 8298): `viettts server --port 8298`
+  - **ZeroTTS** (cổng 8001): `python tools/zerotts_server.py`
 
-**Giọng tiếng Việt qua máy chủ trên máy** nghe tự nhiên hơn, đổi lại phải tự chạy máy chủ:
-
-| Máy chủ | Địa chỉ | Lệnh chạy |
-|---|---|---|
-| VieNeu-TTS v3 Turbo | 127.0.0.1:8000 | `uv run python -m apps.openai_speech` |
-
-Chưa chạy máy chủ thì popup hiện sẵn lệnh để bạn sao chép. Chạy xong, mở lại popup là thấy đủ giọng.
-
-Cách cài máy chủ và lý do chọn: [docs/engines.md](docs/engines.md).
+Khi chọn giọng AI mà máy chủ chưa bật, popup sẽ hiện sẵn câu lệnh để bạn sao chép và khởi động. Xem chi tiết tại [docs/engines.md](docs/engines.md).

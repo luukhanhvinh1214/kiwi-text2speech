@@ -9,6 +9,7 @@ const MENU_ID = "kt-speak-selection";
 const PROBE_TIMEOUT = 2000;
 const FRAME_ID = "kt-expand-frame";
 const DRAFT_KEY = "draft";
+const SPEECH_PREFIX = "   ";
 
 const state = {
   status: "idle",
@@ -79,6 +80,9 @@ async function speak(text, options = {}) {
     setState({ status: "idle", message: "Không có văn bản nào để đọc" });
     return { ok: false, message: state.message };
   }
+
+  // Thêm khoảng trắng đầu để bộ đọc không nuốt âm đầu khi bắt đầu phát.
+  segments[0] = SPEECH_PREFIX + segments[0];
 
   // Máy chủ chưa chạy thì báo ngay kèm lệnh chạy, thay vì để lỗi "Failed to
   // fetch" của từng đoạn dội về sau đó.
