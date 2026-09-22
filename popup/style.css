@@ -59,13 +59,19 @@ body.expanded {
   gap: 12px;
   margin: 14px -14px -14px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #e6f1ea, #f7fbf8 55%, #d9e9e0);
+  background: linear-gradient(to top right, #d4e7dc 0%, #edf5f0 55%, #f8fbf9 100%);
   border-top: 1px solid #cddcd3;
 }
 
-:root[data-theme="dark"] .brand,
-:root:not([data-theme="light"]) .brand {
-  background: linear-gradient(135deg, #1b2720, #223129 55%, #18231c);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand {
+    background: linear-gradient(to top right, #2d483a 0%, #202f26 50%, #16201a 100%);
+    border-top-color: #2e3e34;
+  }
+}
+
+:root[data-theme="dark"] .brand {
+  background: linear-gradient(to top right, #2d483a 0%, #202f26 50%, #16201a 100%);
   border-top-color: #2e3e34;
 }
 
@@ -81,8 +87,13 @@ body.expanded {
   color: #1b2c22;
 }
 
-:root[data-theme="dark"] .brand .name,
-:root:not([data-theme="light"]) .brand .name {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand .name {
+    color: #e0eee6;
+  }
+}
+
+:root[data-theme="dark"] .brand .name {
   color: #e0eee6;
 }
 
@@ -94,21 +105,32 @@ body.expanded {
   color: #4d6357;
 }
 
-:root[data-theme="dark"] .brand .role,
-:root:not([data-theme="light"]) .brand .role {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand .role {
+    color: #8fa99b;
+  }
+}
+
+:root[data-theme="dark"] .brand .role {
   color: #8fa99b;
 }
 
 .head {
   margin: -14px -14px 12px;
   padding: 14px 14px 10px;
-  background: radial-gradient(circle at 100% 0%, rgba(31, 111, 74, 0.28) 0%, rgba(31, 111, 74, 0.1) 45%, rgba(31, 111, 74, 0.02) 75%, transparent 100%);
+  background: linear-gradient(to bottom left, rgba(31, 111, 74, 0.24) 0%, rgba(31, 111, 74, 0.08) 55%, transparent 100%);
   border-bottom: 1px solid rgba(31, 111, 74, 0.14);
 }
 
-:root[data-theme="dark"] .head,
-:root:not([data-theme="light"]) .head {
-  background: radial-gradient(circle at 100% 0%, rgba(63, 155, 109, 0.35) 0%, rgba(63, 155, 109, 0.12) 50%, rgba(63, 155, 109, 0.02) 80%, transparent 100%);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .head {
+    background: linear-gradient(to bottom left, rgba(63, 155, 109, 0.32) 0%, rgba(63, 155, 109, 0.1) 55%, transparent 100%);
+    border-bottom-color: rgba(63, 155, 109, 0.2);
+  }
+}
+
+:root[data-theme="dark"] .head {
+  background: linear-gradient(to bottom left, rgba(63, 155, 109, 0.32) 0%, rgba(63, 155, 109, 0.1) 55%, transparent 100%);
   border-bottom-color: rgba(63, 155, 109, 0.2);
 }
 

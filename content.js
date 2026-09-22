@@ -11,10 +11,36 @@
   let isSpeaking = false;
   let currentSpeakingType = "";
 
-  const send = (message) => chrome.runtime.sendMessage(message);
+  function isContextValid() {
+    return Boolean(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
+  }
+
+  function send(message) {
+    if (!isContextValid()) return Promise.resolve(null);
+    try {
+      return chrome.runtime.sendMessage(message).catch(() => null);
+    } catch {
+      return Promise.resolve(null);
+    }
+  }
+
+  function teardown() {
+    document.removeEventListener("selectionchange", onSelectionChange);
+    document.removeEventListener("mousedown", onMouseDown);
+    document.removeEventListener("mouseup", onMouseUp);
+    document.removeEventListener("keyup", onKeyUp);
+    window.removeEventListener("scroll", handleScrollOrResize, { capture: true });
+    window.removeEventListener("resize", handleScrollOrResize);
+    if (host) {
+      host.remove();
+      host = null;
+      shadow = null;
+    }
+  }
 
   function ensureHost() {
     if (host) return;
+    if (!isContextValid()) return;
 
     host = document.createElement("div");
     host.id = "kiwi-selection-root";
@@ -174,7 +200,12 @@
       }
     `;
 
-    const iconUrl = chrome.runtime.getURL("icons/icon32.png");
+    let iconUrl = "";
+    try {
+      iconUrl = isContextValid() ? chrome.runtime.getURL("icons/icon32.png") : "";
+    } catch {
+      iconUrl = "";
+    }
 
     const container = document.createElement("div");
     container.className = "container";
@@ -435,6 +466,11 @@
   }
 
   function handleSelection() {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
+
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       hideUI();
@@ -507,6 +543,10 @@
   }
 
   function handleScrollOrResize() {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
     if (scrollRaf) return;
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = 0;
@@ -514,24 +554,40 @@
     });
   }
 
-  document.addEventListener("selectionchange", () => {
+  function onSelectionChange() {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
       hideUI();
     }
-  });
+  }
 
-  document.addEventListener("mousedown", (e) => {
+  function onMouseDown(e) {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
     if (host && e.composedPath().includes(host)) return;
     hideUI();
-  });
+  }
 
-  document.addEventListener("mouseup", (e) => {
+  function onMouseUp(e) {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
     if (host && e.composedPath().includes(host)) return;
     setTimeout(handleSelection, 20);
-  });
+  }
 
-  document.addEventListener("keyup", (e) => {
+  function onKeyUp(e) {
+    if (!isContextValid()) {
+      teardown();
+      return;
+    }
     if (e.key === "Escape") {
       hideUI();
       return;
@@ -539,8 +595,12 @@
     if (["Shift", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
       setTimeout(handleSelection, 40);
     }
-  });
+  }
 
+  document.addEventListener("selectionchange", onSelectionChange);
+  document.addEventListener("mousedown", onMouseDown);
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("keyup", onKeyUp);
   window.addEventListener("scroll", handleScrollOrResize, { capture: true, passive: true });
   window.addEventListener("resize", handleScrollOrResize, { passive: true });
 
