@@ -1,3 +1,5 @@
+import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../src/kt_translate.js";
+
 const el = {
   text: document.getElementById("text"),
   textField: document.getElementById("text-field"),
@@ -17,7 +19,19 @@ const el = {
   status: document.getElementById("status"),
   theme: document.getElementById("theme"),
   serverNote: document.getElementById("server-note"),
-  copyRun: document.getElementById("copy-run")
+  copyRun: document.getElementById("copy-run"),
+  tabTts: document.getElementById("tab-tts"),
+  tabTranslate: document.getElementById("tab-translate"),
+  panelTts: document.getElementById("panel-tts"),
+  panelTranslate: document.getElementById("panel-translate"),
+  sourceLang: document.getElementById("source-lang"),
+  targetLang: document.getElementById("target-lang"),
+  swapLang: document.getElementById("swap-lang"),
+  doTranslate: document.getElementById("do-translate"),
+  translatedText: document.getElementById("translated-text"),
+  copyTranslation: document.getElementById("copy-translation"),
+  speakTranslation: document.getElementById("speak-translation"),
+  openWebTranslate: document.getElementById("open-web-translate")
 };
 
 const send = (message) => chrome.runtime.sendMessage(message);
@@ -158,7 +172,122 @@ async function start() {
   }
 
   await loadVoices(settings.voiceId);
+  fillLanguages();
 }
+
+function fillLanguages() {
+  el.sourceLang.innerHTML = "";
+  for (const item of SOURCE_LANGUAGES) {
+    const opt = document.createElement("option");
+    opt.value = item.code;
+    opt.textContent = item.label;
+    el.sourceLang.append(opt);
+  }
+  el.sourceLang.value = "en";
+
+  el.targetLang.innerHTML = "";
+  for (const item of TARGET_LANGUAGES) {
+    const opt = document.createElement("option");
+    opt.value = item.code;
+    opt.textContent = item.label;
+    el.targetLang.append(opt);
+  }
+  el.targetLang.value = "vi";
+}
+
+function switchTab(name) {
+  const isTts = name === "tts";
+  el.tabTts.classList.toggle("active", isTts);
+  el.tabTts.setAttribute("aria-selected", String(isTts));
+  el.tabTranslate.classList.toggle("active", !isTts);
+  el.tabTranslate.setAttribute("aria-selected", String(!isTts));
+  el.panelTts.hidden = !isTts;
+  el.panelTranslate.hidden = isTts;
+}
+
+el.tabTts.addEventListener("click", () => switchTab("tts"));
+el.tabTranslate.addEventListener("click", () => switchTab("translate"));
+
+el.swapLang.addEventListener("click", () => {
+  const currentSource = el.sourceLang.value;
+  const currentTarget = el.targetLang.value;
+
+  if (currentSource === "auto") {
+    el.sourceLang.value = currentTarget;
+    el.targetLang.value = currentTarget === "vi" ? "en" : "vi";
+    return;
+  }
+
+  el.sourceLang.value = currentTarget;
+  el.targetLang.value = currentSource;
+});
+
+el.doTranslate.addEventListener("click", async () => {
+  const text = el.text.value.trim();
+  if (!text) {
+    showStatus("Vui lòng nhập nội dung.", "error");
+    return;
+  }
+
+  el.doTranslate.disabled = true;
+  showStatus("Đang dịch...");
+
+  try {
+    const result = await send({
+      type: "translate",
+      text,
+      sl: el.sourceLang.value,
+      tl: el.targetLang.value
+    });
+
+    if (result && result.ok) {
+      el.translatedText.value = result.translation;
+      showStatus("Đã dịch xong", "ready");
+    } else {
+      showStatus(result?.message || "Không dịch được", "error");
+    }
+  } catch (err) {
+    showStatus("Lỗi dịch: " + err.message, "error");
+  } finally {
+    el.doTranslate.disabled = false;
+  }
+});
+
+el.copyTranslation.addEventListener("click", async () => {
+  const text = el.translatedText.value.trim();
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    el.copyTranslation.textContent = "Đã sao chép";
+    setTimeout(() => {
+      el.copyTranslation.textContent = "Sao chép";
+    }, 2000);
+  } catch (err) {
+    showStatus("Không sao chép được: " + err.message, "error");
+  }
+});
+
+el.speakTranslation.addEventListener("click", async () => {
+  const text = el.translatedText.value.trim();
+  if (!text) return;
+
+  showState({ ...state, status: "preparing", message: "" });
+  const result = await send({ type: "speak", text });
+  if (result && result.ok === false) {
+    showState({ ...state, status: "idle", message: result.message });
+  }
+});
+
+el.openWebTranslate.addEventListener("click", () => {
+  const text = el.text.value.trim();
+  send({
+    type: "openWebTranslate",
+    text,
+    sl: el.sourceLang.value,
+    tl: el.targetLang.value
+  });
+});
 
 el.play.addEventListener("click", async () => {
   const text = el.text.value.trim();

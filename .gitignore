@@ -16,6 +16,7 @@ build/
 CLAUDE.md
 .vscode/
 .idea/
+.agents/
 
 # Công cụ và ghi chú chỉ dùng khi phát triển, không thuộc phần đóng gói
 # extension. .mcp.json trỏ tới mcp-server/, bỏ theo luôn cho khỏi trỏ vào chỗ

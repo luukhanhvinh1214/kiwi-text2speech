@@ -17,9 +17,9 @@
 
     <h1>Kiwi Text2Speech</h1>
 
-    <div id="server-note" class="server-note" hidden>
-      <p>Máy chủ giọng nói chưa chạy</p>
-      <button type="button" id="copy-run">Sao chép lệnh khởi động</button>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-tts" class="tab-btn active" aria-selected="true">Đọc</button>
+      <button type="button" role="tab" id="tab-translate" class="tab-btn" aria-selected="false">Dịch</button>
     </div>
 
     <div class="field" id="text-field">
@@ -33,42 +33,83 @@
           </svg>
         </button>
       </div>
-      <textarea id="text" rows="6" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
+      <textarea id="text" rows="5" placeholder="Chọn đoạn văn bản hoặc gõ vào đây."></textarea>
     </div>
 
-    <div class="field">
-      <label for="voice">Giọng đọc</label>
-      <div class="select-box">
-        <select id="voice"></select>
+    <div id="panel-tts">
+      <div id="server-note" class="server-note" hidden>
+        <p>Máy chủ giọng nói chưa chạy</p>
+        <button type="button" id="copy-run">Sao chép lệnh khởi động</button>
+      </div>
+
+      <div class="field">
+        <label for="voice">Giọng đọc</label>
+        <div class="select-box">
+          <select id="voice"></select>
+        </div>
+      </div>
+      <p id="hint" class="hint"></p>
+
+      <label class="field">
+        <span>Tốc độ <output id="rate-value">1,0</output></span>
+        <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" />
+      </label>
+
+      <div class="buttons">
+        <button type="button" id="play" class="primary" title="Đọc" aria-label="Đọc">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 13 8l-9 5.5z" /></svg>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+        <button type="button" id="pause" title="Tạm dừng" aria-label="Tạm dừng">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="4" y="3" width="3" height="10" />
+            <rect x="9" y="3" width="3" height="10" />
+          </svg>
+        </button>
+        <button type="button" id="resume" title="Tiếp tục" aria-label="Tiếp tục">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="3" y="3" width="2.5" height="10" />
+            <path d="M7.5 3 13.5 8l-6 5z" />
+          </svg>
+        </button>
+        <button type="button" id="stop" title="Dừng" aria-label="Dừng">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" /></svg>
+        </button>
       </div>
     </div>
-    <p id="hint" class="hint"></p>
 
-    <label class="field">
-      <span>Tốc độ <output id="rate-value">1,0</output></span>
-      <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" />
-    </label>
+    <div id="panel-translate" hidden>
+      <div class="lang-row">
+        <div class="select-box lang-box">
+          <select id="source-lang"></select>
+        </div>
+        <button type="button" id="swap-lang" class="icon-btn swap-btn" title="Đổi chiều ngôn ngữ" aria-label="Đổi chiều ngôn ngữ">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2.5 5.5h10.5M9.5 2.5l3.5 3-3.5 3" />
+            <path d="M13.5 10.5H3M6.5 7.5l-3.5 3 3.5 3" />
+          </svg>
+        </button>
+        <div class="select-box lang-box">
+          <select id="target-lang"></select>
+        </div>
+      </div>
 
-    <div class="buttons">
-      <button type="button" id="play" class="primary" title="Đọc" aria-label="Đọc">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 13 8l-9 5.5z" /></svg>
-        <span class="spinner" aria-hidden="true"></span>
-      </button>
-      <button type="button" id="pause" title="Tạm dừng" aria-label="Tạm dừng">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="4" y="3" width="3" height="10" />
-          <rect x="9" y="3" width="3" height="10" />
-        </svg>
-      </button>
-      <button type="button" id="resume" title="Tiếp tục" aria-label="Tiếp tục">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="3" y="3" width="2.5" height="10" />
-          <path d="M7.5 3 13.5 8l-6 5z" />
-        </svg>
-      </button>
-      <button type="button" id="stop" title="Dừng" aria-label="Dừng">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" /></svg>
-      </button>
+      <div class="translate-action">
+        <button type="button" id="do-translate" class="primary">Dịch</button>
+      </div>
+
+      <div class="field" id="result-field">
+        <div class="field-head">
+          <label for="translated-text">Bản dịch</label>
+        </div>
+        <textarea id="translated-text" rows="4" readonly placeholder="Kết quả dịch sẽ hiện ở đây."></textarea>
+      </div>
+
+      <div class="translate-buttons">
+        <button type="button" id="copy-translation">Sao chép</button>
+        <button type="button" id="speak-translation">Đọc bản dịch</button>
+        <button type="button" id="open-web-translate">Mở trên web</button>
+      </div>
     </div>
 
     <div class="foot">

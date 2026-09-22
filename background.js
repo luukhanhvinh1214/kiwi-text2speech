@@ -3,6 +3,7 @@ import { splitIntoSegments } from "./src/kt_chunk.js";
 import * as systemEngine from "./src/kt_system.js";
 import * as serverEngine from "./src/kt_server.js";
 import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } from "./src/kt_voices.js";
+import { translateText, buildWebTranslateUrl } from "./src/kt_translate.js";
 
 const MENU_ID = "kt-speak-selection";
 const PROBE_TIMEOUT = 2000;
@@ -253,7 +254,12 @@ const handlers = {
   voices: () => voices(),
   selection: () => selectionOfActiveTab().then((text) => ({ text })),
   settings: () => loadSettings().then(withoutSecrets),
-  saveSettings: (message) => saveSettings(message.patch).then(withoutSecrets)
+  saveSettings: (message) => saveSettings(message.patch).then(withoutSecrets),
+  translate: (message) => translateText({ text: message.text, sl: message.sl, tl: message.tl }),
+  openWebTranslate: (message) => {
+    const url = buildWebTranslateUrl({ text: message.text, sl: message.sl, tl: message.tl });
+    return chrome.tabs.create({ url }).then(() => ({ ok: true }));
+  }
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
