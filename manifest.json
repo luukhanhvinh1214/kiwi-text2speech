@@ -1,0 +1,37 @@
+{
+  "name": "Kiwi Text to Speech",
+  "description": "Đọc thành tiếng đoạn văn bản bạn chọn trên trang web",
+  "version": "0.1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_title": "Kiwi Text to Speech",
+    "default_popup": "popup/popup.html"
+  },
+  "options_page": "options/options.html",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "tts",
+    "storage",
+    "offscreen",
+    "contextMenus",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "commands": {
+    "doc-doan-da-chon": {
+      "suggested_key": { "default": "Alt+S" },
+      "description": "Đọc đoạn đang chọn"
+    },
+    "dung-doc": {
+      "suggested_key": { "default": "Alt+X" },
+      "description": "Dừng đọc"
+    }
+  }
+}

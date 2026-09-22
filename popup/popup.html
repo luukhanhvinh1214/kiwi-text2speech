@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kiwi Text to Speech</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>Kiwi Text to Speech</h1>
+
+    <label class="field">
+      <span>Văn bản</span>
+      <textarea id="text" rows="6" placeholder="Bôi đen chữ trên trang rồi mở lại, hoặc gõ vào đây"></textarea>
+    </label>
+
+    <button type="button" id="lay-doan-da-chon" class="link">Lấy đoạn đang chọn trên trang</button>
+
+    <label class="field">
+      <span>Giọng đọc</span>
+      <select id="voice"></select>
+    </label>
+
+    <label class="field">
+      <span>Tốc độ <output id="rate-value">1,0</output></span>
+      <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" />
+    </label>
+
+    <div class="buttons">
+      <button type="button" id="doc" class="primary">Đọc</button>
+      <button type="button" id="tam-dung">Tạm dừng</button>
+      <button type="button" id="tiep-tuc">Tiếp tục</button>
+      <button type="button" id="dung">Dừng</button>
+    </div>
+
+    <p id="status" class="status">Đang chờ</p>
+
+    <button type="button" id="mo-cai-dat" class="link">Cài đặt</button>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

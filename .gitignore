@@ -17,6 +17,17 @@ CLAUDE.md
 .vscode/
 .idea/
 
+# Công cụ và ghi chú chỉ dùng khi phát triển, không thuộc phần đóng gói
+# extension. .mcp.json trỏ tới mcp-server/, bỏ theo luôn cho khỏi trỏ vào chỗ
+# trống. mcp-server/.profile chứa cookie và phiên đăng nhập thật.
+mcp-server/
+tools/
+test/
+.mcp.json
+
+# Chrome sinh ra ngay trong thư mục extension khi nạp bản giải nén
+_metadata/
+
 # Hệ điều hành
 Thumbs.db
 Desktop.ini
