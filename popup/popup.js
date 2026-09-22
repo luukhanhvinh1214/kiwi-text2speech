@@ -172,10 +172,10 @@ async function start() {
   }
 
   await loadVoices(settings.voiceId);
-  fillLanguages();
+  fillLanguages(settings.sourceLang, settings.targetLang);
 }
 
-function fillLanguages() {
+function fillLanguages(source = "auto", target = "vi") {
   el.sourceLang.innerHTML = "";
   for (const item of SOURCE_LANGUAGES) {
     const opt = document.createElement("option");
@@ -183,7 +183,7 @@ function fillLanguages() {
     opt.textContent = item.label;
     el.sourceLang.append(opt);
   }
-  el.sourceLang.value = "en";
+  el.sourceLang.value = SOURCE_LANGUAGES.some((l) => l.code === source) ? source : "auto";
 
   el.targetLang.innerHTML = "";
   for (const item of TARGET_LANGUAGES) {
@@ -192,7 +192,7 @@ function fillLanguages() {
     opt.textContent = item.label;
     el.targetLang.append(opt);
   }
-  el.targetLang.value = "vi";
+  el.targetLang.value = TARGET_LANGUAGES.some((l) => l.code === target) ? target : "vi";
 }
 
 function switchTab(name) {
@@ -208,6 +208,14 @@ function switchTab(name) {
 el.tabTts.addEventListener("click", () => switchTab("tts"));
 el.tabTranslate.addEventListener("click", () => switchTab("translate"));
 
+el.sourceLang.addEventListener("change", () => {
+  send({ type: "saveSettings", patch: { sourceLang: el.sourceLang.value } });
+});
+
+el.targetLang.addEventListener("change", () => {
+  send({ type: "saveSettings", patch: { targetLang: el.targetLang.value } });
+});
+
 el.swapLang.addEventListener("click", () => {
   const currentSource = el.sourceLang.value;
   const currentTarget = el.targetLang.value;
@@ -215,11 +223,15 @@ el.swapLang.addEventListener("click", () => {
   if (currentSource === "auto") {
     el.sourceLang.value = currentTarget;
     el.targetLang.value = currentTarget === "vi" ? "en" : "vi";
-    return;
+  } else {
+    el.sourceLang.value = currentTarget;
+    el.targetLang.value = currentSource;
   }
 
-  el.sourceLang.value = currentTarget;
-  el.targetLang.value = currentSource;
+  send({
+    type: "saveSettings",
+    patch: { sourceLang: el.sourceLang.value, targetLang: el.targetLang.value }
+  });
 });
 
 el.doTranslate.addEventListener("click", async () => {

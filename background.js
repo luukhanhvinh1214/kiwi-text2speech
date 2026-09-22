@@ -256,6 +256,12 @@ const handlers = {
   settings: () => loadSettings().then(withoutSecrets),
   saveSettings: (message) => saveSettings(message.patch).then(withoutSecrets),
   translate: (message) => translateText({ text: message.text, sl: message.sl, tl: message.tl }),
+  translateSelection: async (message) => {
+    const settings = await loadSettings();
+    const sl = message.sl || settings.sourceLang || "auto";
+    const tl = message.tl || settings.targetLang || "vi";
+    return translateText({ text: message.text, sl, tl });
+  },
   openWebTranslate: (message) => {
     const url = buildWebTranslateUrl({ text: message.text, sl: message.sl, tl: message.tl });
     return chrome.tabs.create({ url }).then(() => ({ ok: true }));

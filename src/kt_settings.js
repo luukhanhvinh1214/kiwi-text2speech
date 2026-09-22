@@ -9,7 +9,9 @@ export const DEFAULTS = {
   volume: 1,
   lang: "vi-VN",
   maxCharsPerSegment: 280,
-  apiKeys: {}
+  apiKeys: {},
+  sourceLang: "auto",
+  targetLang: "vi"
 };
 
 export async function loadSettings() {
