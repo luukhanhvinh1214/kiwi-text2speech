@@ -8,6 +8,8 @@
   let selectionRect = null;
   let translatedText = "";
   let scrollRaf = 0;
+  let isSpeaking = false;
+  let currentSpeakingType = "";
 
   const send = (message) => chrome.runtime.sendMessage(message);
 
@@ -99,6 +101,11 @@
         border-color: #1f6f4a;
         color: #1f6f4a;
       }
+      .action-btn.is-speaking {
+        background: #1f6f4a;
+        border-color: #1f6f4a;
+        color: #ffffff;
+      }
       .action-btn svg {
         width: 12px;
         height: 12px;
@@ -153,6 +160,10 @@
       .icon-btn:hover {
         background: #e6f1ea;
       }
+      .icon-btn.is-speaking {
+        background: #1f6f4a;
+        color: #ffffff;
+      }
       .icon-btn svg {
         width: 16px;
         height: 16px;
@@ -204,6 +215,48 @@
     bindEvents();
   }
 
+  function setSpeakingState(speaking, type = "") {
+    isSpeaking = speaking;
+    currentSpeakingType = speaking ? type : "";
+
+    if (!shadow) return;
+    const speakBtn = shadow.getElementById("speak-btn");
+    const cardSpeak = shadow.getElementById("card-speak");
+    const cardStatus = shadow.getElementById("card-status");
+
+    if (speakBtn) {
+      const icon = speakBtn.querySelector("svg");
+      const label = speakBtn.querySelector("span");
+      if (speaking && type === "bubble") {
+        speakBtn.title = "Dừng đọc";
+        speakBtn.setAttribute("aria-label", "Dừng đọc");
+        if (label) label.textContent = "Dừng";
+        if (icon) icon.innerHTML = '<rect x="3.5" y="3.5" width="9" height="9" fill="currentColor"/>';
+        speakBtn.classList.add("is-speaking");
+      } else {
+        speakBtn.title = "Đọc văn bản";
+        speakBtn.setAttribute("aria-label", "Đọc văn bản");
+        if (label) label.textContent = "Đọc";
+        if (icon) icon.innerHTML = '<path d="M4 2.5 13 8l-9 5.5z"/>';
+        speakBtn.classList.remove("is-speaking");
+      }
+    }
+
+    if (cardSpeak) {
+      if (speaking && type === "card") {
+        cardSpeak.title = "Dừng đọc";
+        cardSpeak.setAttribute("aria-label", "Dừng đọc");
+        if (cardStatus) cardStatus.textContent = "Đang đọc";
+        cardSpeak.classList.add("is-speaking");
+      } else {
+        cardSpeak.title = "Đọc bản dịch";
+        cardSpeak.setAttribute("aria-label", "Đọc bản dịch");
+        if (cardStatus && cardStatus.textContent === "Đang đọc") cardStatus.textContent = "";
+        cardSpeak.classList.remove("is-speaking");
+      }
+    }
+  }
+
   function bindEvents() {
     const bubble = shadow.getElementById("bubble");
     const trigger = shadow.getElementById("trigger");
@@ -225,15 +278,34 @@
       }
     });
 
-    speakBtn.addEventListener("click", (e) => {
+    speakBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
+      if (isSpeaking && currentSpeakingType === "bubble") {
+        setSpeakingState(false);
+        send({ type: "stop" });
+        return;
+      }
+
       const text = selectedText;
-      hideUI();
-      if (text) send({ type: "speak", text });
+      if (!text) return;
+
+      setSpeakingState(true, "bubble");
+      try {
+        const res = await send({ type: "speak", text });
+        if (res && res.ok === false) {
+          setSpeakingState(false);
+        }
+      } catch {
+        setSpeakingState(false);
+      }
     });
 
     translateBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
+      if (isSpeaking) {
+        send({ type: "stop" });
+        setSpeakingState(false);
+      }
       const text = selectedText;
       const rect = selectionRect;
       bubble.hidden = true;
@@ -257,11 +329,25 @@
       }
     });
 
-    cardSpeak.addEventListener("click", (e) => {
+    cardSpeak.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (!translatedText) return;
-      cardStatus.textContent = "Đang đọc";
-      send({ type: "speak", text: translatedText });
+
+      if (isSpeaking && currentSpeakingType === "card") {
+        setSpeakingState(false);
+        send({ type: "stop" });
+        return;
+      }
+
+      setSpeakingState(true, "card");
+      try {
+        const res = await send({ type: "speak", text: translatedText });
+        if (res && res.ok === false) {
+          setSpeakingState(false);
+        }
+      } catch {
+        setSpeakingState(false);
+      }
     });
   }
 
@@ -329,6 +415,10 @@
   }
 
   function hideUI() {
+    if (isSpeaking) {
+      send({ type: "stop" });
+      setSpeakingState(false);
+    }
     if (!shadow) return;
     const bubble = shadow.getElementById("bubble");
     const card = shadow.getElementById("card");
@@ -453,4 +543,12 @@
 
   window.addEventListener("scroll", handleScrollOrResize, { capture: true, passive: true });
   window.addEventListener("resize", handleScrollOrResize, { passive: true });
+
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message && message.from === "background" && message.type === "state") {
+      if (message.state.status === "idle" && isSpeaking) {
+        setSpeakingState(false);
+      }
+    }
+  });
 })();

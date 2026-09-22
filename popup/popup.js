@@ -1,4 +1,5 @@
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../src/kt_translate.js";
+import { defaultRateForVoice, isVietnameseText, pickSourceVoiceId } from "../src/kt_voices.js";
 
 const el = {
   text: document.getElementById("text"),
@@ -29,7 +30,9 @@ const el = {
   swapLang: document.getElementById("swap-lang"),
   doTranslate: document.getElementById("do-translate"),
   translatedText: document.getElementById("translated-text"),
+  translateVoice: document.getElementById("translate-voice"),
   copyTranslation: document.getElementById("copy-translation"),
+  speakSource: document.getElementById("speak-source"),
   speakTranslation: document.getElementById("speak-translation"),
   openWebTranslate: document.getElementById("open-web-translate")
 };
@@ -39,6 +42,7 @@ const send = (message) => chrome.runtime.sendMessage(message);
 let catalog = { groups: [], defaultId: "" };
 let state = { status: "idle", index: 0, total: 0, message: "" };
 let ready = false;
+let currentTarget = "";
 
 function showStatus(text, kind = "") {
   el.status.textContent = text;
@@ -61,10 +65,17 @@ function render() {
   el.pause.disabled = status !== "speaking";
   el.resume.disabled = status !== "paused";
   el.stop.disabled = status === "idle";
+
+  const speakingSource = status === "speaking" && currentTarget === "source";
+  const speakingTranslation = status === "speaking" && currentTarget === "translation";
+
+  if (el.speakSource) el.speakSource.classList.toggle("is-speaking", speakingSource);
+  if (el.speakTranslation) el.speakTranslation.classList.toggle("is-speaking", speakingTranslation);
 }
 
 function showState(next) {
   state = next;
+  if (state.status === "idle") currentTarget = "";
   render();
 }
 
@@ -83,9 +94,8 @@ function showHint(voiceId) {
   render();
 }
 
-function fillVoices(chosen) {
-  el.voice.innerHTML = "";
-
+function createVoiceOptGroups() {
+  const fragment = document.createDocumentFragment();
   for (const group of catalog.groups) {
     if (!group.items.length) continue;
 
@@ -99,13 +109,24 @@ function fillVoices(chosen) {
       optGroup.append(option);
     }
 
-    el.voice.append(optGroup);
+    fragment.append(optGroup);
   }
-
-  el.voice.value = chosen;
+  return fragment;
 }
 
-async function loadVoices(voiceId) {
+function fillVoices(chosen, chosenTranslate) {
+  el.voice.innerHTML = "";
+  el.voice.append(createVoiceOptGroups());
+  el.voice.value = chosen;
+
+  if (el.translateVoice) {
+    el.translateVoice.innerHTML = "";
+    el.translateVoice.append(createVoiceOptGroups());
+    el.translateVoice.value = chosenTranslate || chosen;
+  }
+}
+
+async function loadVoices(voiceId, translateVoiceId) {
   let result;
   try {
     result = await send({ type: "voices" });
@@ -125,7 +146,10 @@ async function loadVoices(voiceId) {
   const kept = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
   const chosen = kept ? voiceId : catalog.defaultId;
 
-  fillVoices(chosen);
+  const keptTranslate = catalog.groups.some((group) => group.items.some((item) => item.id === translateVoiceId));
+  const chosenTranslate = keptTranslate ? translateVoiceId : chosen;
+
+  fillVoices(chosen, chosenTranslate);
   showHint(chosen);
 
   if (!chosen) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
@@ -171,7 +195,7 @@ async function start() {
     if (text.trim()) el.text.value = text.trim();
   }
 
-  await loadVoices(settings.voiceId);
+  await loadVoices(settings.voiceId, settings.translateVoiceId);
   fillLanguages(settings.sourceLang, settings.targetLang);
 }
 
@@ -280,13 +304,55 @@ el.copyTranslation.addEventListener("click", async () => {
   }
 });
 
-el.speakTranslation.addEventListener("click", async () => {
-  const text = el.translatedText.value.trim();
-  if (!text) return;
+if (el.speakSource) {
+  el.speakSource.addEventListener("click", async () => {
+    if (state.status === "speaking" && currentTarget === "source") {
+      await send({ type: "stop" });
+      currentTarget = "";
+      return;
+    }
 
+    const text = el.text.value.trim();
+    if (!text) {
+      showState({ ...state, message: "Vui lòng nhập nội dung." });
+      return;
+    }
+
+    const isVi = isVietnameseText(text, el.sourceLang.value);
+    const voiceId = pickSourceVoiceId(catalog, isVi);
+    const rate = defaultRateForVoice(voiceId);
+
+    currentTarget = "source";
+    showState({ ...state, status: "preparing", message: "" });
+    const result = await send({ type: "speak", text, voiceId, rate });
+    if (result && result.ok === false) {
+      currentTarget = "";
+      showState({ ...state, status: "idle", message: result.message });
+    }
+  });
+}
+
+el.speakTranslation.addEventListener("click", async () => {
+  if (state.status === "speaking" && currentTarget === "translation") {
+    await send({ type: "stop" });
+    currentTarget = "";
+    return;
+  }
+
+  const text = el.translatedText.value.trim();
+  if (!text) {
+    showState({ ...state, message: "Không có bản dịch để đọc" });
+    return;
+  }
+
+  const voiceId = (el.translateVoice && el.translateVoice.value) || el.voice.value;
+  const rate = defaultRateForVoice(voiceId);
+
+  currentTarget = "translation";
   showState({ ...state, status: "preparing", message: "" });
-  const result = await send({ type: "speak", text });
+  const result = await send({ type: "speak", text, voiceId, rate });
   if (result && result.ok === false) {
+    currentTarget = "";
     showState({ ...state, status: "idle", message: result.message });
   }
 });
@@ -309,15 +375,22 @@ el.play.addEventListener("click", async () => {
   }
 
   // Thăm dò máy chủ mất tới 2 giây, nên bật con quay ngay chứ không chờ báo về.
+  currentTarget = "main";
   showState({ ...state, status: "preparing", message: "" });
 
   const result = await send({ type: "speak", text });
-  if (result && result.ok === false) showState({ ...state, status: "idle", message: result.message });
+  if (result && result.ok === false) {
+    currentTarget = "";
+    showState({ ...state, status: "idle", message: result.message });
+  }
 });
 
 el.pause.addEventListener("click", () => send({ type: "pause" }));
 el.resume.addEventListener("click", () => send({ type: "resume" }));
-el.stop.addEventListener("click", () => send({ type: "stop" }));
+el.stop.addEventListener("click", () => {
+  currentTarget = "";
+  send({ type: "stop" });
+});
 
 el.theme.addEventListener("click", () => {
   window.ktTheme.toggle();
@@ -351,9 +424,25 @@ el.rate.addEventListener("input", () => showRate(el.rate.value));
 el.rate.addEventListener("change", () => send({ type: "saveSettings", patch: { rate: Number(el.rate.value) } }));
 
 el.voice.addEventListener("change", async () => {
-  showHint(el.voice.value);
-  await send({ type: "saveSettings", patch: { voiceId: el.voice.value } });
+  const voiceId = el.voice.value;
+  showHint(voiceId);
+  const rate = defaultRateForVoice(voiceId);
+  el.rate.value = rate;
+  showRate(rate);
+
+  if (el.translateVoice && !el.translateVoice.dataset.customized) {
+    el.translateVoice.value = voiceId;
+  }
+
+  await send({ type: "saveSettings", patch: { voiceId, rate } });
 });
+
+if (el.translateVoice) {
+  el.translateVoice.addEventListener("change", async () => {
+    el.translateVoice.dataset.customized = "1";
+    await send({ type: "saveSettings", patch: { translateVoiceId: el.translateVoice.value } });
+  });
+}
 
 el.copyRun.addEventListener("click", async () => {
   const commands = catalog.groups

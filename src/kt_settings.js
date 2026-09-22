@@ -4,14 +4,15 @@ const KEY = "settings";
 // Những giá trị còn lại đặt cứng ở đây, không có trang cài đặt nào sửa.
 export const DEFAULTS = {
   voiceId: "",
-  rate: 1,
+  rate: 0.8,
   pitch: 1,
   volume: 1,
   lang: "vi-VN",
   maxCharsPerSegment: 280,
   apiKeys: {},
   sourceLang: "auto",
-  targetLang: "vi"
+  targetLang: "vi",
+  translateVoiceId: ""
 };
 
 export async function loadSettings() {

@@ -155,3 +155,52 @@ export function buildCatalog(systemVoices, probes = []) {
 export function groupOfVoice(catalog, voiceId) {
   return catalog.groups.find((group) => group.items.some((item) => item.id === voiceId)) || null;
 }
+
+export function defaultRateForVoice(voiceId) {
+  const parsed = parseVoiceId(voiceId);
+  if (parsed && parsed.kind === "server") return 1;
+  return 0.8;
+}
+
+const VIETNAMESE_CHARS_REGEX =
+  /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+
+export function isVietnameseText(text, langCode = "auto") {
+  if (langCode === "vi") return true;
+  if (langCode && langCode !== "auto") return false;
+  return VIETNAMESE_CHARS_REGEX.test(text || "");
+}
+
+export function pickSourceVoiceId(catalog, isVietnamese) {
+  const allItems = (catalog.groups || []).flatMap((g) => g.items || []);
+  if (isVietnamese) {
+    const msAn = allItems.find(
+      (item) =>
+        item.label.toLowerCase().includes("microsoft an") ||
+        item.id.toLowerCase().includes("microsoft an")
+    );
+    if (msAn) return msAn.id;
+    const anyVi = allItems.find(
+      (item) => item.lang && String(item.lang).toLowerCase().startsWith("vi")
+    );
+    if (anyVi) return anyVi.id;
+  } else {
+    const googleUkMale = allItems.find(
+      (item) =>
+        item.label.toLowerCase().includes("google uk english male") ||
+        item.id.toLowerCase().includes("google uk english male")
+    );
+    if (googleUkMale) return googleUkMale.id;
+    const googleUk = allItems.find(
+      (item) =>
+        item.label.toLowerCase().includes("google uk english") ||
+        item.id.toLowerCase().includes("google uk english")
+    );
+    if (googleUk) return googleUk.id;
+    const anyEn = allItems.find(
+      (item) => item.lang && String(item.lang).toLowerCase().startsWith("en")
+    );
+    if (anyEn) return anyEn.id;
+  }
+  return catalog.defaultId || "";
+}

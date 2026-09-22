@@ -2,7 +2,7 @@ import { loadSettings, saveSettings, withoutSecrets } from "./src/kt_settings.js
 import { splitIntoSegments } from "./src/kt_chunk.js";
 import * as systemEngine from "./src/kt_system.js";
 import * as serverEngine from "./src/kt_server.js";
-import { SERVER_PRESETS, buildCatalog, parseVoiceId, resolveVoice, serverOf } from "./src/kt_voices.js";
+import { SERVER_PRESETS, buildCatalog, defaultRateForVoice, parseVoiceId, resolveVoice, serverOf } from "./src/kt_voices.js";
 import { translateText, buildWebTranslateUrl } from "./src/kt_translate.js";
 
 const MENU_ID = "kt-speak-selection";
@@ -21,6 +21,11 @@ const state = {
 
 function broadcast() {
   chrome.runtime.sendMessage({ from: "background", type: "state", state }).catch(() => {});
+  chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+    if (tab && tab.id) {
+      chrome.tabs.sendMessage(tab.id, { from: "background", type: "state", state }).catch(() => {});
+    }
+  }).catch(() => {});
 }
 
 function setState(patch) {
@@ -53,19 +58,21 @@ async function probePreset(preset, settings) {
 // động, chrome.tts.getVoices có thể còn thiếu giọng của hệ điều hành, ghi lúc đó
 // là chốt nhầm một giọng rồi giữ mãi. Chọn lại mỗi lần đọc, và bỏ qua giọng đã
 // lưu nếu máy không còn giọng đó.
-async function targetOf(settings) {
-  const parsed = parseVoiceId(settings.voiceId);
-  if (parsed && parsed.kind === "server") return resolveVoice(settings.voiceId, settings);
+async function targetOf(settings, customVoiceId) {
+  const chosenId = customVoiceId || settings.voiceId;
+  const parsed = parseVoiceId(chosenId);
+  if (parsed && parsed.kind === "server") return resolveVoice(chosenId, settings);
 
   const { groups, defaultId } = buildCatalog(await systemEngine.listVoices());
   const systemGroup = groups.find((group) => group.id === "system");
-  const stillHere = systemGroup.items.some((item) => item.id === settings.voiceId);
-  return resolveVoice(stillHere ? settings.voiceId : defaultId, settings);
+  const stillHere = systemGroup.items.some((item) => item.id === chosenId);
+  return resolveVoice(stillHere ? chosenId : defaultId, settings);
 }
 
-async function speak(text) {
+async function speak(text, options = {}) {
   const settings = await loadSettings();
-  const target = await targetOf(settings);
+  const voiceId = options.voiceId || settings.voiceId;
+  const target = await targetOf(settings, voiceId);
   const segments = splitIntoSegments(text, settings.maxCharsPerSegment);
 
   if (!segments.length) {
@@ -94,11 +101,13 @@ async function speak(text) {
     text
   });
 
+  const rate = options.rate !== undefined ? options.rate : (settings.rate ?? defaultRateForVoice(voiceId));
+
   try {
     if (target.engine === "server") {
-      await serverEngine.speak(segments, { ...settings, server: target.server });
+      await serverEngine.speak(segments, { ...settings, rate, server: target.server });
     } else {
-      await systemEngine.speak(segments, { ...settings, voiceName: target.voiceName }, onEngineEvent);
+      await systemEngine.speak(segments, { ...settings, rate, voiceName: target.voiceName }, onEngineEvent);
     }
   } catch (err) {
     setState({ status: "idle", message: err.message });
@@ -223,7 +232,7 @@ async function takeDraft() {
 }
 
 const handlers = {
-  speak: (message) => speak(message.text),
+  speak: (message) => speak(message.text, { voiceId: message.voiceId, rate: message.rate }),
   openFrame: () => openFrame(),
   closeFrame: () => closeFrame(),
   shrinkFrame: async () => {

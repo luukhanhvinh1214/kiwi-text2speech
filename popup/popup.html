@@ -7,15 +7,9 @@
     <script src="theme.js"></script>
   </head>
   <body>
-    <header class="brand">
-      <img src="../icons/logo-lkv.png" alt="Chữ ký LKV" />
-      <div class="brand-text">
-        <div class="name">2imKisSa</div>
-        <div class="role">AI &amp; Software Engineer</div>
-      </div>
+    <header class="head">
+      <h1><span class="brand-kiwi">Kiwi</span> Text2Speech</h1>
     </header>
-
-    <h1>Kiwi Text2Speech</h1>
 
     <div class="tabs" role="tablist">
       <button type="button" role="tab" id="tab-tts" class="tab-btn active" aria-selected="true">Đọc</button>
@@ -94,8 +88,15 @@
         </div>
       </div>
 
-      <div class="translate-action">
+      <div class="translate-action-row">
         <button type="button" id="do-translate" class="primary">Dịch</button>
+        <button type="button" id="speak-source" class="icon-btn-action" title="Đọc văn bản nguồn" aria-label="Đọc văn bản nguồn">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M7.5 2.5 3.5 6H1v4h2.5l4 3.5V2.5z" />
+            <path d="M10.5 5.5a3.5 3.5 0 0 1 0 5" />
+            <path d="M12.5 3.5a6.5 6.5 0 0 1 0 9" />
+          </svg>
+        </button>
       </div>
 
       <div class="field" id="result-field">
@@ -105,10 +106,23 @@
         <textarea id="translated-text" rows="4" readonly placeholder="Kết quả dịch sẽ hiện ở đây."></textarea>
       </div>
 
+      <div class="field">
+        <label for="translate-voice">Giọng đọc bản dịch</label>
+        <div class="select-box">
+          <select id="translate-voice"></select>
+        </div>
+      </div>
+
       <div class="translate-buttons">
         <button type="button" id="copy-translation">Sao chép</button>
-        <button type="button" id="speak-translation">Đọc bản dịch</button>
         <button type="button" id="open-web-translate">Mở trên web</button>
+        <button type="button" id="speak-translation" class="icon-btn-action" title="Đọc bản dịch" aria-label="Đọc bản dịch">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M7.5 2.5 3.5 6H1v4h2.5l4 3.5V2.5z" />
+            <path d="M10.5 5.5a3.5 3.5 0 0 1 0 5" />
+            <path d="M12.5 3.5a6.5 6.5 0 0 1 0 9" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -125,6 +139,14 @@
         </svg>
       </button>
     </div>
+
+    <footer class="brand">
+      <img src="../icons/logo-lkv.png" alt="Chữ ký LKV" />
+      <div class="brand-text">
+        <div class="name">2imKisSa</div>
+        <div class="role">AI &amp; Software Engineer</div>
+      </div>
+    </footer>
 
     <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Ô văn bản mở rộng" hidden>
       <div class="overlay-box" id="text-slot">
