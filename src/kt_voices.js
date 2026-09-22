@@ -69,10 +69,7 @@ export function matchSystemVoices(voices) {
 }
 
 export function serverVoiceItems(preset, liveNames = []) {
-  const names = [...preset.voices];
-  for (const name of liveNames) {
-    if (name && !names.includes(name)) names.push(name);
-  }
+  const names = preset.voices && preset.voices.length ? [...preset.voices] : [...liveNames];
 
   if (!names.length) {
     return [{ id: `server:${preset.id}:`, label: `Giọng mặc định của ${preset.label}`, lang: preset.lang }];
