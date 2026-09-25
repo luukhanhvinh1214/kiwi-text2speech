@@ -168,9 +168,15 @@ export function isVietnameseText(text, langCode = "auto") {
   return VIETNAMESE_CHARS_REGEX.test(text || "");
 }
 
-export function pickSourceVoiceId(catalog, isVietnamese) {
+const VIETNAMESE_SERVER_VOICE_ID = "server:vieneu:Anh Khôi";
+
+export function pickVoiceForLanguage(catalog, isVietnamese) {
   const allItems = (catalog.groups || []).flatMap((g) => g.items || []);
   if (isVietnamese) {
+    const serverReady = (catalog.groups || []).some(
+      (group) => group.ready && group.items.some((item) => item.id === VIETNAMESE_SERVER_VOICE_ID)
+    );
+    if (serverReady) return VIETNAMESE_SERVER_VOICE_ID;
     const msAn = allItems.find(
       (item) =>
         item.label.toLowerCase().includes("microsoft an") ||

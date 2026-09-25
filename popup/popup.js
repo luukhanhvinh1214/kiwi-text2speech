@@ -1,5 +1,5 @@
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../src/kt_translate.js";
-import { defaultRateForVoice, isVietnameseText, pickSourceVoiceId } from "../src/kt_voices.js";
+import { defaultRateForVoice, isVietnameseText, pickVoiceForLanguage } from "../src/kt_voices.js";
 
 const el = {
   text: document.getElementById("text"),
@@ -115,19 +115,21 @@ function createVoiceOptGroups() {
   return fragment;
 }
 
-function fillVoices(chosen, chosenTranslate) {
+function fillVoices(chosen) {
   el.voice.innerHTML = "";
   el.voice.append(createVoiceOptGroups());
   el.voice.value = chosen;
 
-  if (el.translateVoice) {
-    el.translateVoice.innerHTML = "";
-    el.translateVoice.append(createVoiceOptGroups());
-    el.translateVoice.value = chosenTranslate || chosen;
-  }
+  el.translateVoice.innerHTML = "";
+  el.translateVoice.append(createVoiceOptGroups());
+  pickTranslateVoice();
 }
 
-async function loadVoices(voiceId, translateVoiceId) {
+function pickTranslateVoice() {
+  el.translateVoice.value = pickVoiceForLanguage(catalog, el.targetLang.value === "vi");
+}
+
+async function loadVoices(voiceId) {
   let result;
   try {
     result = await send({ type: "voices" });
@@ -147,10 +149,7 @@ async function loadVoices(voiceId, translateVoiceId) {
   const kept = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
   const chosen = kept ? voiceId : catalog.defaultId;
 
-  const keptTranslate = catalog.groups.some((group) => group.items.some((item) => item.id === translateVoiceId));
-  const chosenTranslate = keptTranslate ? translateVoiceId : chosen;
-
-  fillVoices(chosen, chosenTranslate);
+  fillVoices(chosen);
   showHint(chosen);
 
   if (!chosen) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
@@ -158,7 +157,7 @@ async function loadVoices(voiceId, translateVoiceId) {
 
 async function reloadVoices() {
   const settings = await send({ type: "settings" });
-  await loadVoices(settings.voiceId, settings.translateVoiceId);
+  await loadVoices(settings.voiceId);
 }
 
 function showTheme() {
@@ -191,6 +190,7 @@ async function start() {
   el.selectionBubble.checked = settings.selectionBubble;
   el.rate.value = settings.rate;
   showRate(settings.rate);
+  fillLanguages(settings.sourceLang, settings.targetLang);
 
   showState(await send({ type: "state" }));
 
@@ -202,8 +202,7 @@ async function start() {
     if (text.trim()) el.text.value = text.trim();
   }
 
-  await loadVoices(settings.voiceId, settings.translateVoiceId);
-  fillLanguages(settings.sourceLang, settings.targetLang);
+  await loadVoices(settings.voiceId);
 }
 
 function fillLanguages(source = "auto", target = "vi") {
@@ -244,6 +243,7 @@ el.sourceLang.addEventListener("change", () => {
 });
 
 el.targetLang.addEventListener("change", () => {
+  pickTranslateVoice();
   send({ type: "saveSettings", patch: { targetLang: el.targetLang.value } });
 });
 
@@ -259,6 +259,7 @@ el.swapLang.addEventListener("click", () => {
     el.targetLang.value = currentSource;
   }
 
+  pickTranslateVoice();
   send({
     type: "saveSettings",
     patch: { sourceLang: el.sourceLang.value, targetLang: el.targetLang.value }
@@ -326,7 +327,7 @@ if (el.speakSource) {
     }
 
     const isVi = isVietnameseText(text, el.sourceLang.value);
-    const voiceId = pickSourceVoiceId(catalog, isVi);
+    const voiceId = pickVoiceForLanguage(catalog, isVi);
     const rate = defaultRateForVoice(voiceId);
 
     currentTarget = "source";
@@ -352,7 +353,7 @@ el.speakTranslation.addEventListener("click", async () => {
     return;
   }
 
-  const voiceId = (el.translateVoice && el.translateVoice.value) || el.voice.value;
+  const voiceId = el.translateVoice.value || el.voice.value;
   const rate = defaultRateForVoice(voiceId);
 
   currentTarget = "translation";
@@ -441,19 +442,8 @@ el.voice.addEventListener("change", async () => {
   el.rate.value = rate;
   showRate(rate);
 
-  if (el.translateVoice && !el.translateVoice.dataset.customized) {
-    el.translateVoice.value = voiceId;
-  }
-
   await send({ type: "saveSettings", patch: { voiceId, rate } });
 });
-
-if (el.translateVoice) {
-  el.translateVoice.addEventListener("change", async () => {
-    el.translateVoice.dataset.customized = "1";
-    await send({ type: "saveSettings", patch: { translateVoiceId: el.translateVoice.value } });
-  });
-}
 
 el.copyRun.addEventListener("click", async () => {
   const commands = catalog.groups

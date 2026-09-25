@@ -12,7 +12,6 @@ export const DEFAULTS = {
   apiKeys: {},
   sourceLang: "auto",
   targetLang: "vi",
-  translateVoiceId: "",
   selectionBubble: true
 };
 
