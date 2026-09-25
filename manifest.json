@@ -1,7 +1,7 @@
 {
   "name": "Kiwi Text to Speech",
   "description": "Chuyển nội dung văn bản thành âm thanh",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "manifest_version": 3,
   "icons": {
     "16": "icons/icon16.png",

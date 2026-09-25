@@ -19,6 +19,7 @@ const el = {
   stop: document.getElementById("stop"),
   status: document.getElementById("status"),
   theme: document.getElementById("theme"),
+  selectionBubble: document.getElementById("selection-bubble"),
   serverNote: document.getElementById("server-note"),
   copyRun: document.getElementById("copy-run"),
   tabTts: document.getElementById("tab-tts"),
@@ -155,6 +156,11 @@ async function loadVoices(voiceId, translateVoiceId) {
   if (!chosen) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
 }
 
+async function reloadVoices() {
+  const settings = await send({ type: "settings" });
+  await loadVoices(settings.voiceId, settings.translateVoiceId);
+}
+
 function showTheme() {
   const theme = window.ktTheme.current();
   const label = theme === "dark" ? "Chuyển sang nền sáng" : "Chuyển sang nền tối";
@@ -182,6 +188,7 @@ async function start() {
   showTheme();
 
   const settings = await send({ type: "settings" });
+  el.selectionBubble.checked = settings.selectionBubble;
   el.rate.value = settings.rate;
   showRate(settings.rate);
 
@@ -397,6 +404,10 @@ el.theme.addEventListener("click", () => {
   showTheme();
 });
 
+el.selectionBubble.addEventListener("change", () => {
+  send({ type: "saveSettings", patch: { selectionBubble: el.selectionBubble.checked } });
+});
+
 // Trang chrome:// và vài trang bị Chrome cấm chèn mã, ở đó rơi về ô mở rộng nằm trong popup.
 el.expand.addEventListener("click", async () => {
   await send({ type: "saveDraft", text: el.text.value });
@@ -463,5 +474,7 @@ el.copyRun.addEventListener("click", async () => {
 chrome.runtime.onMessage.addListener((message) => {
   if (message && message.from === "background" && message.type === "state") showState(message.state);
 });
+
+speechSynthesis.addEventListener("voiceschanged", reloadVoices);
 
 start();

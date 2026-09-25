@@ -67,7 +67,7 @@ Tải về, giải nén, rồi làm bốn bước ở trên với thư mục v�
 
 Bấm vào icon trên thanh công cụ hoặc thao tác trực tiếp trên trang:
 
-- **Bong bóng đọc nhanh**: Bôi đen đoạn chữ trên bất kỳ trang web nào, một biểu tượng loa nhỏ sẽ hiện lên để bạn bấm đọc ngay mà không cần mở popup.
+- **Bong bóng đọc nhanh**: Bôi đen đoạn chữ trên bất kỳ trang web nào, một biểu tượng loa nhỏ sẽ hiện lên để bạn bấm đọc ngay mà không cần mở popup. Không muốn biểu tượng này hiện thì tắt công tắc ở góc phải phía trên popup.
 - **Thẻ dịch trên trang**: Bấm vào nút dịch ở bong bóng để xem bản dịch và nghe phát âm bản dịch trực tiếp.
 - **Menu chuột phải**: Chuột phải vào đoạn chữ đã bôi đen, chọn **Đọc đoạn đã chọn**.
 - **Phóng to khung soạn thảo**: Bấm biểu tượng phóng to ở góc trên ô nhập văn bản trong popup để mở giao diện toàn màn hình, tiện xem và sửa các bài viết dài.

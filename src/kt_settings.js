@@ -1,7 +1,7 @@
 const KEY = "settings";
 
-// Chỉ giọng và tốc độ là thứ người dùng đổi được, và đổi ngay trong popup.
-// Những giá trị còn lại đặt cứng ở đây, không có trang cài đặt nào sửa.
+// Người dùng chỉ đổi cài đặt ngay trong popup. Những giá trị popup không đụng
+// tới thì đặt cứng ở đây, không có trang cài đặt nào sửa.
 export const DEFAULTS = {
   voiceId: "",
   rate: 0.8,
@@ -12,7 +12,8 @@ export const DEFAULTS = {
   apiKeys: {},
   sourceLang: "auto",
   targetLang: "vi",
-  translateVoiceId: ""
+  translateVoiceId: "",
+  selectionBubble: true
 };
 
 export async function loadSettings() {

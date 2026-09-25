@@ -10,6 +10,7 @@
   let scrollRaf = 0;
   let isSpeaking = false;
   let currentSpeakingType = "";
+  let bubbleEnabled = false;
 
   function isContextValid() {
     return Boolean(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
@@ -470,6 +471,7 @@
       teardown();
       return;
     }
+    if (!bubbleEnabled) return;
 
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
@@ -596,6 +598,16 @@
       setTimeout(handleSelection, 40);
     }
   }
+
+  function applySettings(settings) {
+    bubbleEnabled = settings?.selectionBubble !== false;
+    if (!bubbleEnabled) hideUI();
+  }
+
+  chrome.storage.local.get("settings").then((stored) => applySettings(stored.settings));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.settings) applySettings(changes.settings.newValue);
+  });
 
   document.addEventListener("selectionchange", onSelectionChange);
   document.addEventListener("mousedown", onMouseDown);
