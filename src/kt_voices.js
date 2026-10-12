@@ -153,10 +153,16 @@ export function groupOfVoice(catalog, voiceId) {
   return catalog.groups.find((group) => group.items.some((item) => item.id === voiceId)) || null;
 }
 
+export const AUTO_VOICE_ID = "auto";
+
 export function defaultRateForVoice(voiceId) {
   const parsed = parseVoiceId(voiceId);
   if (parsed && parsed.kind === "server") return 1;
   return 0.8;
+}
+
+export function autoRate(rate, voiceId) {
+  return rate * (defaultRateForVoice(voiceId) / defaultRateForVoice(AUTO_VOICE_ID));
 }
 
 const VIETNAMESE_CHARS_REGEX =
@@ -169,41 +175,18 @@ export function isVietnameseText(text, langCode = "auto") {
 }
 
 const VIETNAMESE_SERVER_VOICE_ID = "server:vieneu:Anh Khôi";
+const VIETNAMESE_SYSTEM_VOICE = "Microsoft An";
+const FOREIGN_SYSTEM_VOICE = "Microsoft Mark";
 
 export function pickVoiceForLanguage(catalog, isVietnamese) {
-  const allItems = (catalog.groups || []).flatMap((g) => g.items || []);
-  if (isVietnamese) {
-    const serverReady = (catalog.groups || []).some(
-      (group) => group.ready && group.items.some((item) => item.id === VIETNAMESE_SERVER_VOICE_ID)
-    );
-    if (serverReady) return VIETNAMESE_SERVER_VOICE_ID;
-    const msAn = allItems.find(
-      (item) =>
-        item.label.toLowerCase().includes("microsoft an") ||
-        item.id.toLowerCase().includes("microsoft an")
-    );
-    if (msAn) return msAn.id;
-    const anyVi = allItems.find(
-      (item) => item.lang && String(item.lang).toLowerCase().startsWith("vi")
-    );
-    if (anyVi) return anyVi.id;
-  } else {
-    const googleUkMale = allItems.find(
-      (item) =>
-        item.label.toLowerCase().includes("google uk english male") ||
-        item.id.toLowerCase().includes("google uk english male")
-    );
-    if (googleUkMale) return googleUkMale.id;
-    const googleUk = allItems.find(
-      (item) =>
-        item.label.toLowerCase().includes("google uk english") ||
-        item.id.toLowerCase().includes("google uk english")
-    );
-    if (googleUk) return googleUk.id;
-    const anyEn = allItems.find(
-      (item) => item.lang && String(item.lang).toLowerCase().startsWith("en")
-    );
-    if (anyEn) return anyEn.id;
-  }
-  return catalog.defaultId || "";
+  const items = (catalog.groups || []).filter((group) => group.ready).flatMap((group) => group.items);
+  const byId = (id) => items.find((item) => item.id === id);
+  const byLabel = (label) => items.find((item) => item.label === label);
+  const byLang = (prefix) => items.find((item) => String(item.lang).toLowerCase().startsWith(prefix));
+
+  const picked = isVietnamese
+    ? byId(VIETNAMESE_SERVER_VOICE_ID) || byLabel(VIETNAMESE_SYSTEM_VOICE) || byLang("vi")
+    : byLabel(FOREIGN_SYSTEM_VOICE) || byLang("en");
+
+  return picked?.id || catalog.defaultId || "";
 }

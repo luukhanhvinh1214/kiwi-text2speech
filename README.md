@@ -71,16 +71,18 @@ Bấm vào icon trên thanh công cụ hoặc thao tác trực tiếp trên tran
 - **Thẻ dịch trên trang**: Bấm vào nút dịch ở bong bóng để xem bản dịch và nghe phát âm bản dịch trực tiếp.
 - **Menu chuột phải**: Chuột phải vào đoạn chữ đã bôi đen, chọn **Đọc đoạn đã chọn**.
 - **Phóng to khung soạn thảo**: Bấm biểu tượng phóng to ở góc trên ô nhập văn bản trong popup để mở giao diện toàn màn hình, tiện xem và sửa các bài viết dài.
-- **Tab Dịch trong popup**: Nhập văn bản nguồn, bấm dịch rồi nghe văn bản nguồn hoặc bản dịch. Giọng đọc tự chọn theo ngôn ngữ: tiếng Việt dùng Anh Khôi khi VieNeu đang chạy, chưa chạy thì dùng Microsoft An; ngôn ngữ khác dùng Google UK English Male. Muốn nghe giọng khác thì đổi ở ô giọng đọc bản dịch. Có nút sao chép và liên kết mở nhanh Google Dịch.
+- **Tab Dịch trong popup**: Nhập văn bản nguồn, bấm dịch rồi nghe văn bản nguồn hoặc bản dịch. Giọng đọc tự chọn theo ngôn ngữ như mục Giọng đọc bên dưới. Muốn nghe giọng khác thì đổi ở ô giọng đọc bản dịch. Có nút sao chép và liên kết mở nhanh Google Dịch.
 
 ## Phím tắt
 
 - `Alt+S`: Đọc đoạn văn bản đang chọn trên trang.
 - `Alt+X`: Dừng đọc ngay lập tức.
+- `Enter` trong ô văn bản của popup: đọc ở tab Đọc, dịch ở tab Dịch. Muốn xuống dòng thì bấm `Shift+Enter`.
 
 ## Giọng đọc
 
-- **Giọng có sẵn trên máy (System)**: Dùng được ngay, không cần cài đặt (Microsoft An, David, Mark, Zira, Google US/UK...). Tự động ưu tiên giọng tiếng Việt nếu máy có.
+- **Tự động theo ngôn ngữ** (mặc định): tiếng Việt đọc bằng Anh Khôi khi VieNeu đang chạy, chưa chạy thì bằng Microsoft An; ngôn ngữ khác đọc bằng Microsoft Mark. Áp dụng cho popup, bong bóng trên trang, menu chuột phải và `Alt+S`. Chọn một giọng cụ thể ở ô Giọng đọc của tab Đọc thì những chỗ trên đọc bằng giọng đó; tab Dịch và bản dịch trên trang vẫn tự chọn theo ngôn ngữ.
+- **Giọng có sẵn trên máy (System)**: Dùng được ngay, không cần cài đặt (Microsoft An, David, Mark, Zira, Google US/UK...).
 - **Giọng AI tự nhiên qua máy chủ cục bộ (Local Server)**: Hỗ trợ các máy chủ giọng AI tiếng Việt chất lượng cao chạy trên máy (chuẩn OpenAI speech):
   - **VieNeu-TTS** (cổng 8000): `uv run python -m apps.openai_speech`
   - **VietTTS** (cổng 8298): `viettts server --port 8298`

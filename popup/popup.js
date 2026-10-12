@@ -1,5 +1,5 @@
 import { SOURCE_LANGUAGES, TARGET_LANGUAGES } from "../src/kt_translate.js";
-import { defaultRateForVoice, isVietnameseText, pickVoiceForLanguage } from "../src/kt_voices.js";
+import { AUTO_VOICE_ID, defaultRateForVoice, isVietnameseText, pickVoiceForLanguage } from "../src/kt_voices.js";
 
 const el = {
   text: document.getElementById("text"),
@@ -91,7 +91,7 @@ function showHint(voiceId) {
   el.hint.textContent = missing ? group.hint : "";
   el.serverNote.hidden = !(missing && group.run);
 
-  ready = !!voiceId && !!group && group.ready;
+  ready = voiceId === AUTO_VOICE_ID || !!group?.ready;
   render();
 }
 
@@ -117,7 +117,7 @@ function createVoiceOptGroups() {
 
 function fillVoices(chosen) {
   el.voice.innerHTML = "";
-  el.voice.append(createVoiceOptGroups());
+  el.voice.append(new Option("Tự động theo ngôn ngữ", AUTO_VOICE_ID), createVoiceOptGroups());
   el.voice.value = chosen;
 
   el.translateVoice.innerHTML = "";
@@ -147,12 +147,12 @@ async function loadVoices(voiceId) {
 
   // Giọng đã lưu có thể không còn trên máy này, nhưng đừng ghi đè cài đặt của người dùng.
   const kept = catalog.groups.some((group) => group.items.some((item) => item.id === voiceId));
-  const chosen = kept ? voiceId : catalog.defaultId;
+  const chosen = kept ? voiceId : AUTO_VOICE_ID;
 
   fillVoices(chosen);
   showHint(chosen);
 
-  if (!chosen) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
+  if (!catalog.defaultId) showState({ ...state, message: "Máy này chưa có giọng nào trong danh sách" });
 }
 
 async function reloadVoices() {
@@ -424,6 +424,13 @@ el.expand.addEventListener("click", async () => {
 });
 el.shrink.addEventListener("click", () => expandText(false));
 el.closeExpand.addEventListener("click", () => expandText(false));
+
+el.text.addEventListener("keydown", (event) => {
+  // Bộ gõ tiếng Việt dùng Enter để chốt chữ đang gõ, lúc đó không được đọc hay dịch.
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  (el.panelTts.hidden ? el.doTranslate : el.play).click();
+});
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !el.overlay.hidden) {

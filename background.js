@@ -2,7 +2,17 @@ import { loadSettings, saveSettings, withoutSecrets } from "./src/kt_settings.js
 import { splitIntoSegments } from "./src/kt_chunk.js";
 import * as systemEngine from "./src/kt_system.js";
 import * as serverEngine from "./src/kt_server.js";
-import { SERVER_PRESETS, buildCatalog, defaultRateForVoice, parseVoiceId, resolveVoice, serverOf } from "./src/kt_voices.js";
+import {
+  SERVER_PRESETS,
+  autoRate,
+  buildCatalog,
+  groupOfVoice,
+  isVietnameseText,
+  parseVoiceId,
+  pickVoiceForLanguage,
+  resolveVoice,
+  serverOf
+} from "./src/kt_voices.js";
 import { translateText, buildWebTranslateUrl } from "./src/kt_translate.js";
 
 const MENU_ID = "kt-speak-selection";
@@ -59,21 +69,23 @@ async function probePreset(preset, settings) {
 // động, chrome.tts.getVoices có thể còn thiếu giọng của hệ điều hành, ghi lúc đó
 // là chốt nhầm một giọng rồi giữ mãi. Chọn lại mỗi lần đọc, và bỏ qua giọng đã
 // lưu nếu máy không còn giọng đó.
-async function targetOf(settings, customVoiceId) {
-  const chosenId = customVoiceId || settings.voiceId;
+async function voiceIdFor(text, chosenId) {
   const parsed = parseVoiceId(chosenId);
-  if (parsed && parsed.kind === "server") return resolveVoice(chosenId, settings);
+  if (parsed && parsed.kind === "server") return chosenId;
 
-  const { groups, defaultId } = buildCatalog(await systemEngine.listVoices());
-  const systemGroup = groups.find((group) => group.id === "system");
-  const stillHere = systemGroup.items.some((item) => item.id === chosenId);
-  return resolveVoice(stillHere ? chosenId : defaultId, settings);
+  if (parsed && parsed.kind === "system") {
+    const stillHere = groupOfVoice(buildCatalog(await systemEngine.listVoices()), chosenId);
+    if (stillHere) return chosenId;
+  }
+
+  return pickVoiceForLanguage(await voices(), isVietnameseText(text));
 }
 
 async function speak(text, options = {}) {
   const settings = await loadSettings();
-  const voiceId = options.voiceId || settings.voiceId;
-  const target = await targetOf(settings, voiceId);
+  const chosenId = options.voiceId || settings.voiceId;
+  const voiceId = await voiceIdFor(text, chosenId);
+  const target = resolveVoice(voiceId, settings);
   const segments = splitIntoSegments(text, settings.maxCharsPerSegment);
 
   if (!segments.length) {
@@ -105,7 +117,7 @@ async function speak(text, options = {}) {
     text
   });
 
-  const rate = options.rate !== undefined ? options.rate : (settings.rate ?? defaultRateForVoice(voiceId));
+  const rate = options.rate ?? (voiceId === chosenId ? settings.rate : autoRate(settings.rate, voiceId));
 
   try {
     if (target.engine === "server") {

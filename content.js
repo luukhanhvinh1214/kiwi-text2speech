@@ -373,7 +373,7 @@
 
       setSpeakingState(true, "card");
       try {
-        const res = await send({ type: "speak", text: translatedText });
+        const res = await send({ type: "speak", text: translatedText, voiceId: "auto" });
         if (res && res.ok === false) {
           setSpeakingState(false);
         }
